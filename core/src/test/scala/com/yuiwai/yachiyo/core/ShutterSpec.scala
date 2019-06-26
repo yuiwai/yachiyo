@@ -69,5 +69,13 @@ object ShutterSpec extends TestSuite {
         Shutter.release(Scale(3))(P(3, 3))(subject) ==> Set(85, 53, 22, 12, 87, 40, 19)
       }
     }
+    "aggregator" - {
+      "sum" - {
+        Aggregator.sum(1 :: 2 :: 3 :: Nil) ==> 6
+      }
+      "average" - {
+        Aggregator.avg(1 :: 2 :: 3 :: Nil) ==> 2
+      }
+    }
   }
 }

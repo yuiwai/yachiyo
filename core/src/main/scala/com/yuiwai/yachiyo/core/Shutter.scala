@@ -38,5 +38,22 @@ abstract class RectangleBound[P, V](x: P => V, y: P => V, start: P, end: P)
     ord.lt(y(value), y(end)) &&
     ord.gt(x(value), x(start)) &&
     ord.gt(y(value), y(start))
+}
 
+object Aggregator {
+  def sum[V: Add](values: Seq[V]): V = values.reduce(implicitly[Add[V]].apply)
+  def avg[L: Add, R](values: Seq[L])(implicit divide: Divide[L, Int]): L = divide(sum(values), values.size)
+}
+
+trait Add[V] {
+  def apply(l: V, r: V): V
+}
+object Add {
+  implicit val intAdd: Add[Int] = _ + _
+}
+trait Divide[L, R] {
+  def apply(l: L, r: R): L
+}
+object Divide {
+  implicit val intDivide: Divide[Int, Int] = _ / _
 }

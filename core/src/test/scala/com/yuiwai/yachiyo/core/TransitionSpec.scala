@@ -66,6 +66,15 @@ object TransitionSpec extends TestSuite {
         t.past(50).value ==> Pos(25, 50)
         t.past(41).value ==> Pos(20, 41)
       }
+      "color" - {
+        val t = Transition(RGB(0, 0, 0), RGB(255, 100, 50), Progress(0, 100, 0))
+        t.value ==> RGB(0, 0, 0)
+        t.past(100).value ==> RGB(255, 100, 50)
+        t.past(50).value ==> RGB(127, 50, 25)
+
+        RGB(0, 0, 0).toHexString ==> "000000"
+        RGB(255, 255, 255).toHexString ==> "ffffff"
+      }
     }
   }
 }

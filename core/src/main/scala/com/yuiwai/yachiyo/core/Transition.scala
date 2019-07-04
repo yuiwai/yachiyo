@@ -38,20 +38,23 @@ object Amount {
     override def convert(v: Char): Int = v.toInt
     override def reverse(v: Int): Char = v.toChar
   }
-  implicit def listAmount[T: Amount]: Amount[List[T]] = new Amount[List[T]] {
-    private val amount = implicitly[Amount[T]]
-    def value(initial: List[T], target: List[T], rate: Double): List[T] =
+  implicit def listAmount[T](implicit amount: Amount[T]): Amount[List[T]] =
+    (initial: List[T], target: List[T], rate: Double) =>
       initial.zip(target).map { case (i, t) => amount.value(i, t, rate) }
-  }
   implicit val stringAmount: Amount[String] = new DelegateAmount[String, List[Char]] {
     override def convert(v: String): List[Char] = v.toList
     override def reverse(v: List[Char]): String = v.mkString
   }
-  implicit def posAmount[T: Amount]: Amount[Pos[T]] = new Amount[Pos[T]] {
-    private val amount = implicitly[Amount[T]]
-    override def value(initial: Pos[T], target: Pos[T], rate: Double): Pos[T] =
+  implicit def posAmount[T](implicit amount: Amount[T]): Amount[Pos[T]] =
+    (initial: Pos[T], target: Pos[T], rate: Double) =>
       Pos(amount.value(initial.x, target.x, rate), amount.value(initial.y, target.y, rate))
-  }
+  implicit val colorAmount: Amount[RGB] =
+    (initial: RGB, target: RGB, rate: Double) =>
+      RGB(
+        intAmount.value(initial.r, target.r, rate),
+        intAmount.value(initial.g, target.g, rate),
+        intAmount.value(initial.b, target.b, rate)
+      )
 }
 
 final case class Progress[T: Counter](initial: T, target: T, current: T, extension: RateExtension = NoExtension) {

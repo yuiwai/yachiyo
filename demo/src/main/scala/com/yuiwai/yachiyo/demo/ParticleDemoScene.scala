@@ -2,16 +2,19 @@ package com.yuiwai.yachiyo.demo
 
 import com.yuiwai.yachiyo.akka.CanvasView
 import com.yuiwai.yachiyo.core.Particle
-import com.yuiwai.yachiyo.ui.{NoCallback, Presenter, Scene, ViewModel}
+import com.yuiwai.yachiyo.demo.ParticleDemoScene.BackToTop
+import com.yuiwai.yachiyo.ui._
 
 object ParticleDemoScene extends Scene {
   override type State = Set[Particle[Int]]
   override type Command = ParticleDemoMsg
   override type Event = None.type
   sealed trait ParticleDemoMsg
+  case object BackToTop extends ParticleDemoMsg
+
   override def initialState(): Set[Particle[Int]] = Set.empty
-  override def execute(state: Set[Particle[Int]], input: ParticleDemoMsg): Result = {
-    (state, None, NoCallback)
+  override def execute(state: Set[Particle[Int]], input: ParticleDemoMsg): Result = input match {
+    case BackToTop => (state, None, NextSceneCallback(DemoApplication.TopSceneKey))
   }
   override def cleanup(): Unit = {}
 }
@@ -24,11 +27,16 @@ class ParticleDemoPresenter extends Presenter {
 
 final case class ParticleDemoViewModel() extends ViewModel
 
-class ParticleDemoView extends CanvasView {
+class ParticleDemoView extends CanvasView with CommonView {
+  override type S = ParticleDemoScene.type
   override type M = ParticleDemoViewModel
-  override def setup(viewModel: ParticleDemoViewModel, listener: Listener): Unit = ???
-  override def cleanup(): Unit = {}
-  override def draw(viewModel: ParticleDemoViewModel): Unit = {
-    println("draw")
+  override def setup(viewModel: ParticleDemoViewModel, listener: Listener): Unit = {
+    val btn = button("Back To Top")
+    btn.onclick = _ => listener(BackToTop)
+    container.appendChild(div(btn))
+
+    val canvas = createCanvas(500, 500)
+    container.appendChild(canvas)
   }
+  override def update(viewModel: ParticleDemoViewModel): Unit = {}
 }

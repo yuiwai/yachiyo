@@ -23,7 +23,7 @@ object View {
 
     Behaviors.receiveMessage[ViewCommand] {
       case Update(viewModel) =>
-        view.draw(viewModel.asInstanceOf[view.M])
+        view.update(viewModel.asInstanceOf[view.M])
         Behaviors.same
       case CleanUp =>
         view.cleanup()

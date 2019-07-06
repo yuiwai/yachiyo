@@ -6,7 +6,7 @@ trait View {
   type Listener = S#Command => Unit
   def setup(viewModel: M, listener: Listener): Unit
   def cleanup(): Unit
-  def draw(viewModel: M): Unit
+  def update(viewModel: M): Unit
 }
 
 trait ViewModel

@@ -31,12 +31,11 @@ class TransitionDemoPresenter extends Presenter {
 
 final case class TransitionViewModel(playing: Boolean) extends ViewModel
 
-class TransitionView extends DomView {
+class TransitionView extends DomView with CommonView {
   override type S = TransitionDemoScene.type
   override type M = TransitionViewModel
   private val duration = 2000
   private var divs = Seq.empty[HTMLDivElement]
-  private def container = elementById("container")
   private var playing = false
   private val t1 = Transition(0, 500, Progress(0, duration, 0))
   private val transitions = Seq(
@@ -73,7 +72,7 @@ class TransitionView extends DomView {
     container.innerHTML = ""
     dom.window.onclick = null
   }
-  override def draw(viewModel: TransitionViewModel): Unit = {
+  override def update(viewModel: TransitionViewModel): Unit = {
     if (viewModel.playing) start()
     else stop()
   }

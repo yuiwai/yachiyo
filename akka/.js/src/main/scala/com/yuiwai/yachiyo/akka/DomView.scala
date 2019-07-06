@@ -2,9 +2,14 @@ package com.yuiwai.yachiyo.akka
 
 import com.yuiwai.yachiyo.ui
 import org.scalajs.dom
-import org.scalajs.dom.raw.{HTMLButtonElement, HTMLElement}
+import org.scalajs.dom.raw.{HTMLButtonElement, HTMLDivElement, HTMLElement}
 
 trait DomView extends ui.View {
+  def div(elems: HTMLElement*): HTMLDivElement = {
+    createElementAs[HTMLDivElement]("div", { e =>
+      elems.foreach(e.appendChild(_))
+    })
+  }
   def createElement(name: String, tap: HTMLElement => Unit = { _ => () }): HTMLElement = {
     val e = dom.document.createElement(name).asInstanceOf[HTMLElement]
     tap(e)

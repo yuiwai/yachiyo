@@ -1,7 +1,7 @@
 package com.yuiwai.yachiyo.demo
 
 import com.yuiwai.yachiyo.akka.DomView
-import com.yuiwai.yachiyo.demo.TopDemoScene.ToTransitionDemo
+import com.yuiwai.yachiyo.demo.TopDemoScene.{ToParticleDemo, ToTransitionDemo}
 import com.yuiwai.yachiyo.ui._
 
 object TopDemoScene extends Scene {
@@ -11,10 +11,12 @@ object TopDemoScene extends Scene {
 
   sealed trait TopDemoCommand
   case object ToTransitionDemo extends TopDemoCommand
+  case object ToParticleDemo extends TopDemoCommand
 
   override def initialState(): None.type = None
   override def execute(state: None.type, input: TopDemoCommand): (None.type, Event, SceneCallback) = input match {
     case ToTransitionDemo => (None, None, NextSceneCallback(DemoApplication.TransitionSceneKey))
+    case ToParticleDemo => (None, None, NextSceneCallback(DemoApplication.ParticleSceneKey))
     case _ => (None, None, NoCallback)
   }
   override def cleanup(): Unit = {}
@@ -33,12 +35,18 @@ class TopView extends DomView {
   override type M = TopViewModel
   private def container = elementById("container")
   override def setup(viewModel: M, listener: Listener): Unit = {
-    val btn = button("Transition Demo")
-    btn.onclick = _ => listener(ToTransitionDemo)
-    container.appendChild(btn)
+    Seq(
+      "Transition Demo" -> ToTransitionDemo,
+      "Particle Demo" -> ToParticleDemo
+    ) foreach {
+      case (label, command) =>
+        val btn = button(label)
+        btn.onclick = _ => listener(command)
+        container.appendChild(btn)
+    }
   }
   override def cleanup(): Unit = {
     container.innerHTML = ""
   }
-  override def draw(viewModel: TopViewModel): Unit = {}
+  override def update(viewModel: TopViewModel): Unit = {}
 }

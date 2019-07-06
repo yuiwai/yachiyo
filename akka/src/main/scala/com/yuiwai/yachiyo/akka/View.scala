@@ -1,42 +1,38 @@
 package com.yuiwai.yachiyo.akka
 
-import akka.actor.typed.ActorRef
 import akka.actor.typed.scaladsl.Behaviors
 import com.yuiwai.yachiyo.akka.Scene.{Execution, SceneCommand}
+import com.yuiwai.yachiyo.ui
+import com.yuiwai.yachiyo.ui.ViewModel
 
-trait View {
-  type M <: ViewModel
-  type S <: Scene
-  type Listener = S#Command => Unit
-  def setup(viewModel: M, listener: Listener): Unit
-  def cleanup(): Unit
-  def draw(viewModel: M): Unit
-}
 object View {
-  type GenView = () => View
+  type GenView = () => ui.View
   sealed trait ViewCommand
-  final case class Initialize(genView: GenView, viewModel: ViewModel, sceneRef: ActorRef[SceneCommand[_]]) extends ViewCommand
+  final case class Initialize(genView: GenView, viewModel: ViewModel) extends ViewCommand
   // TODO draw, cleanupもコマンド経由で
 
-  def deployed(view: View, viewModel: ViewModel, sceneRef: ActorRef[SceneCommand[_]]): Behaviors.Receive[ViewCommand] = {
+  sealed trait ViewCallback
+  final case class ExecutionCallback(command: SceneCommand[_]) extends ViewCallback
+
+  def deployed(view: ui.View, viewModel: ViewModel, listener: ViewCallback => Unit): Behaviors.Receive[ViewCommand] = {
     // FIXME 暫定
-    view.setup(viewModel.asInstanceOf[view.M], c => sceneRef ! Execution(c))
+    view.setup(viewModel.asInstanceOf[view.M], c => listener(ExecutionCallback(Execution(c))))
+
     Behaviors.receiveMessage[ViewCommand] { msg =>
+      // TODO コマンド処理
       Behaviors.same
     }
   }
 
-  def init(): Behaviors.Receive[ViewCommand] = {
+  def init(listener: ViewCallback => Unit): Behaviors.Receive[ViewCommand] = {
     Behaviors.receive[ViewCommand] { (_, msg) =>
       msg match {
         // TODO 初期化後のステートへ遷移
-        case Initialize(genView, viewModel, sceneRef) =>
-          deployed(genView(), viewModel, sceneRef)
+        case Initialize(genView, viewModel) =>
+          deployed(genView(), viewModel, listener)
         case _ => Behaviors.same
       }
     }
   }
 }
-
-trait ViewModel
 

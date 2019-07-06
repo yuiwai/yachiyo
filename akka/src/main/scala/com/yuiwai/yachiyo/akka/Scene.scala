@@ -2,34 +2,19 @@ package com.yuiwai.yachiyo.akka
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import com.yuiwai.yachiyo.akka.Scene.SceneCallback
+import com.yuiwai.yachiyo.ui
+import com.yuiwai.yachiyo.ui.{Initialized, SceneCallback, StateChangedCallback}
 
-trait Scene {
-  type State
-  type Command
-  type Event
-  type Result = (State, Event, SceneCallback)
-  def initialState(/* TODO GlobalState */): State
-  def execute(state: State, input: Command): Result
-  def cleanup(): Unit
-}
 object Scene {
-  type GenScene = () => Scene
+  type GenScene = () => ui.Scene
   sealed trait SceneCommand[-T]
   final case class Initialize(genScene: GenScene) extends SceneCommand[Nothing]
   case object Start extends SceneCommand[Nothing]
   case object Stop extends SceneCommand[Nothing]
-  final case class Execution[S <: Scene](input: S#Command) extends SceneCommand[S]
-  final case class ChangeScene[S <: Scene](scene: S) extends SceneCommand[S]
+  final case class Execution[S <: ui.Scene](input: S#Command) extends SceneCommand[S]
+  final case class ChangeScene[S <: ui.Scene](genScene: GenScene) extends SceneCommand[S]
 
-  sealed trait SceneCallback
-  case object NoCallback extends SceneCallback
-  final case class Initialized[S <: Scene](initialState: S#State) extends SceneCallback
-  final case class EventCallback(event: Scene#Event) extends SceneCallback
-  final case class NextSceneCallback[S <: Scene](genScene: () => S) extends SceneCallback
-  final case class StateChangedCallback(state: Scene#State) extends SceneCallback
-
-  private def deployed(scene: Scene, listener: SceneCallback => Unit): Behavior[SceneCommand[_]] = {
+  private def deployed(scene: ui.Scene, listener: SceneCallback => Unit): Behavior[SceneCommand[_]] = {
     def make(state: scene.State): Behavior[SceneCommand[_]] = {
       listener(StateChangedCallback(state))
       Behaviors.receive[SceneCommand[_]] { (_, msg) =>
@@ -38,10 +23,10 @@ object Scene {
             val (newState, event, output) = scene.execute(state, input.asInstanceOf[scene.Command])
             listener(output)
             make(newState)
-          case ChangeScene(newScene) =>
+          case ChangeScene(genScene) =>
             // TODO cleanupはここではない
             scene.cleanup()
-            deployed(newScene, listener)
+            deployed(genScene(), listener)
           case _ =>
             // TODO other messages.
             Behaviors.same

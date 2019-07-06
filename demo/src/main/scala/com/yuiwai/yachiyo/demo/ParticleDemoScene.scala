@@ -1,8 +1,8 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.Scene.NoCallback
-import com.yuiwai.yachiyo.akka.{CanvasView, Presenter, Scene, ViewModel}
+import com.yuiwai.yachiyo.akka.CanvasView
 import com.yuiwai.yachiyo.core.Particle
+import com.yuiwai.yachiyo.ui.{NoCallback, Presenter, Scene, ViewModel}
 
 object ParticleDemoScene extends Scene {
   override type State = Set[Particle[Int]]

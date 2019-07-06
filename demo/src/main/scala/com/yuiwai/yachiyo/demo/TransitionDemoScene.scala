@@ -1,9 +1,9 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.Scene.{NextSceneCallback, NoCallback, SceneCallback}
-import com.yuiwai.yachiyo.akka.{DomView, Presenter, Scene, ViewModel}
+import com.yuiwai.yachiyo.akka.DomView
 import com.yuiwai.yachiyo.core._
 import com.yuiwai.yachiyo.demo.TransitionDemoScene.{BackToTop, TogglePlaying}
+import com.yuiwai.yachiyo.ui._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLDivElement
 

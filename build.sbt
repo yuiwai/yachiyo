@@ -26,6 +26,13 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
+lazy val ui = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "yachiyo-ui"
+  )
+  .dependsOn(core)
+
 lazy val akka = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
@@ -42,7 +49,7 @@ lazy val akka = crossProject(JSPlatform, JVMPlatform)
       "org.scala-js" %%% "scalajs-dom" % "0.9.7"
     )
   )
-  .dependsOn(core)
+  .dependsOn(ui)
 
 lazy val akkJVM = akka.jvm
 lazy val akkaJS = akka.js

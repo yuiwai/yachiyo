@@ -1,4 +1,6 @@
 package com.yuiwai.yachiyo.akka
 
-trait CanvasView extends View
+import com.yuiwai.yachiyo.ui
+
+trait CanvasView extends ui.View
 

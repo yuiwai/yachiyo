@@ -2,26 +2,21 @@ package com.yuiwai.yachiyo.akka
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
+import com.yuiwai.yachiyo.ui
+import com.yuiwai.yachiyo.ui.ViewModel
 
-trait Presenter {
-  type S <: Scene
-  type M <: ViewModel
-  def setup(initialState: S#State): M = updated(initialState)
-  def cleanup(): Unit = {}
-  def updated(state: S#State): M
-}
 object Presenter {
-  type GenPresenter[M <: ViewModel] = () => Presenter
+  type GenPresenter[M <: ViewModel] = () => ui.Presenter
   sealed trait PresenterCommand
-  final case class Initialize[S <: Scene, M <: ViewModel](initialState: S#State, genPresenter: GenPresenter[M]) extends PresenterCommand
-  final case class Update[S <: Scene](state: S#State) extends PresenterCommand
+  final case class Initialize[S <: ui.Scene, M <: ViewModel](initialState: S#State, genPresenter: GenPresenter[M]) extends PresenterCommand
+  final case class Update[S <: ui.Scene](state: S#State) extends PresenterCommand
   case object Cleanup extends PresenterCommand
 
   sealed trait PresenterCallback
   final case class Initialized(viewModel: ViewModel) extends PresenterCallback
   final case class Updated[M <: ViewModel](viewModel: ViewModel) extends PresenterCallback
 
-  def deployed[S <: Scene, M <: ViewModel](presenter: Presenter, listener: PresenterCallback => Unit): Behaviors.Receive[PresenterCommand] = {
+  def deployed[S <: ui.Scene, M <: ViewModel](presenter: ui.Presenter, listener: PresenterCallback => Unit): Behaviors.Receive[PresenterCommand] = {
     def make(): Behaviors.Receive[PresenterCommand] = {
       Behaviors.receive[PresenterCommand] { (_, msg) =>
         msg match {
@@ -40,7 +35,7 @@ object Presenter {
     }
     make()
   }
-  def init[S <: Scene](listener: PresenterCallback => Unit): Behavior[PresenterCommand] =
+  def init[S <: ui.Scene](listener: PresenterCallback => Unit): Behavior[PresenterCommand] =
     Behaviors.receive { (_, msg) =>
       msg match {
         case Initialize(initialState, genPresenter) =>

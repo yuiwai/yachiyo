@@ -3,6 +3,7 @@ package com.yuiwai.yachiyo.akka
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 import com.yuiwai.yachiyo.akka.Presenter.PresenterCallback
+import com.yuiwai.yachiyo.akka.Scene.CleanUp
 import com.yuiwai.yachiyo.akka.View.ViewCallback
 import com.yuiwai.yachiyo.ui
 import com.yuiwai.yachiyo.ui._
@@ -22,24 +23,29 @@ object Application {
       Behaviors.receiveMessage[ApplicationCommand] {
         case SceneCallbackWrap(msg) =>
           msg match {
-            case NextSceneCallback(genScene) =>
-              presenterRef ! Presenter.Cleanup
-              sceneRef ! Scene.ChangeScene(genScene)
+            case NextSceneCallback(sceneKey) =>
+              preparing(application.resolve(sceneKey))
             case Initialized(state) =>
               presenterRef ! Presenter.Initialize(state, sceneSuite.genPresenter)
+              Behaviors.same
             case StateChangedCallback(state) =>
               presenterRef ! Presenter.Update(state)
-            case NoCallback =>
+              Behaviors.same
+            case NoCallback => Behaviors.same
           }
-          Behaviors.same
         case PresenterCallbackWrap(msg) =>
           msg match {
             case Presenter.Initialized(viewModel) =>
               viewRef ! View.Initialize(sceneSuite.genView, viewModel)
               Behaviors.same
+            case Presenter.Updated(viewModel) =>
+              viewRef ! View.Update(viewModel)
+              Behaviors.same
           }
         case ViewCallbackWrap(msg) =>
           msg match {
+            case View.Initialized =>
+              Behaviors.same
             case View.ExecutionCallback(command) =>
               sceneRef ! command
               Behaviors.same
@@ -50,8 +56,27 @@ object Application {
       }
     }
 
-    def preparing(): Behaviors.Receive[ApplicationCommand] = {
-      Behaviors.receiveMessage[ApplicationCommand] { _ => Behaviors.same }
+    def preparing(sceneSuite: SceneSuite): Behaviors.Receive[ApplicationCommand] = {
+      sceneRef ! CleanUp
+      Behaviors.receiveMessage[ApplicationCommand] {
+        case SceneCallbackWrap(msg) => msg match {
+          case CleanedUp =>
+            presenterRef ! Presenter.Cleanup
+            Behaviors.same
+          case _ => Behaviors.same
+        }
+        case PresenterCallbackWrap(msg) => msg match {
+          case Presenter.CleanedUp =>
+            viewRef ! View.CleanUp
+            Behaviors.same
+          case _ => Behaviors.same
+        }
+        case ViewCallbackWrap(msg) => msg match {
+          case View.CleanedUp =>
+            make(sceneSuite)
+        }
+        case _ => Behaviors.same
+      }
     }
 
     make(application.initialSceneSuite)

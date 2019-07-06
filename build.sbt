@@ -33,6 +33,9 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
   )
   .dependsOn(core)
 
+lazy val uiJS = ui.js
+lazy val uiJVM = ui.jvm
+
 lazy val akka = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(

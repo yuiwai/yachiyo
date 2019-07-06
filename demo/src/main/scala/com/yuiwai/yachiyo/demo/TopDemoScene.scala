@@ -14,7 +14,7 @@ object TopDemoScene extends Scene {
 
   override def initialState(): None.type = None
   override def execute(state: None.type, input: TopDemoCommand): (None.type, Event, SceneCallback) = input match {
-    case ToTransitionDemo => (None, None, NextSceneCallback(() => TransitionDemoScene))
+    case ToTransitionDemo => (None, None, NextSceneCallback(DemoApplication.TransitionSceneKey))
     case _ => (None, None, NoCallback)
   }
   override def cleanup(): Unit = {}
@@ -40,5 +40,5 @@ class TopView extends DomView {
   override def cleanup(): Unit = {
     container.innerHTML = ""
   }
-  override def draw(viewModel: TopViewModel): Unit = ???
+  override def draw(viewModel: TopViewModel): Unit = {}
 }

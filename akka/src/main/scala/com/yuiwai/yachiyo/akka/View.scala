@@ -9,18 +9,28 @@ object View {
   type GenView = () => ui.View
   sealed trait ViewCommand
   final case class Initialize(genView: GenView, viewModel: ViewModel) extends ViewCommand
-  // TODO draw, cleanupもコマンド経由で
+  final case class Update(viewModel: ViewModel) extends ViewCommand
+  case object CleanUp extends ViewCommand
 
   sealed trait ViewCallback
+  case object Initialized extends ViewCallback
+  case object CleanedUp extends ViewCallback
   final case class ExecutionCallback(command: SceneCommand[_]) extends ViewCallback
 
-  def deployed(view: ui.View, viewModel: ViewModel, listener: ViewCallback => Unit): Behaviors.Receive[ViewCommand] = {
+  def deployed(view: ui.View, initialViewModel: ViewModel, listener: ViewCallback => Unit): Behaviors.Receive[ViewCommand] = {
     // FIXME 暫定
-    view.setup(viewModel.asInstanceOf[view.M], c => listener(ExecutionCallback(Execution(c))))
+    view.setup(initialViewModel.asInstanceOf[view.M], c => listener(ExecutionCallback(Execution(c))))
 
-    Behaviors.receiveMessage[ViewCommand] { msg =>
-      // TODO コマンド処理
-      Behaviors.same
+    Behaviors.receiveMessage[ViewCommand] {
+      case Update(viewModel) =>
+        view.draw(viewModel.asInstanceOf[view.M])
+        Behaviors.same
+      case CleanUp =>
+        view.cleanup()
+        listener(CleanedUp)
+        init(listener)
+      case _ =>
+        Behaviors.same
     }
   }
 
@@ -29,6 +39,7 @@ object View {
       msg match {
         // TODO 初期化後のステートへ遷移
         case Initialize(genView, viewModel) =>
+          listener(Initialized)
           deployed(genView(), viewModel, listener)
         case _ => Behaviors.same
       }

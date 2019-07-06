@@ -13,6 +13,7 @@ trait Scene {
 sealed trait SceneCallback
 case object NoCallback extends SceneCallback
 final case class Initialized[S <: Scene](initialState: S#State) extends SceneCallback
+case object CleanedUp extends SceneCallback
 final case class EventCallback(event: Scene#Event) extends SceneCallback
-final case class NextSceneCallback[S <: Scene](genScene: () => S) extends SceneCallback
+final case class NextSceneCallback(sceneKey: Int) extends SceneCallback
 final case class StateChangedCallback(state: Scene#State) extends SceneCallback

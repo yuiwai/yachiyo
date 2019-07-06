@@ -11,14 +11,25 @@ object Demo {
 }
 
 object DemoApplication extends Application {
-  override type SceneKey = Int
-  val TopScene = 1
-  override def initialSceneSuiteKey: Int = TopScene
+  val TopSceneKey = 1
+  val TransitionSceneKey = 2
+  val ParticleSceneKey = 3
+  override def initialSceneSuiteKey: Int = TopSceneKey
   override val sceneSuiteMap: Map[Int, SceneSuite] = Map(
-    TopScene -> new SceneSuite {
-      override val genScene: () => Scene = () => TopDemoScene
-      override val genPresenter: () => Presenter = () => new TopPresenter
-      override val genView: () => View = () => new TopView
-    }
+    TopSceneKey -> SceneSuite(
+      () => TopDemoScene,
+      () => new TopPresenter,
+      () => new TopView
+    ),
+    TransitionSceneKey -> SceneSuite(
+      () => TransitionDemoScene,
+      () => new TransitionDemoPresenter,
+      () => new TransitionView
+    ),
+    ParticleSceneKey -> SceneSuite(
+      () => ParticleDemoScene,
+      () => new ParticleDemoPresenter,
+      () => new ParticleDemoView,
+    )
   )
 }

@@ -18,12 +18,11 @@ object TransitionDemoScene extends Scene {
   override def initialState(): Boolean = false
   override def execute(state: Boolean, input: TransitionDemoMsg): (Boolean, Event, SceneCallback) = input match {
     case TogglePlaying => (!state, None, NoCallback)
-    case BackToTop => (state, None, NextSceneCallback(() => TopDemoScene))
+    case BackToTop => (state, None, NextSceneCallback(DemoApplication.TopSceneKey))
   }
   override def cleanup(): Unit = {}
 }
 
-// FIXME 中身をView/ViewModelに切り分ける
 class TransitionDemoPresenter extends Presenter {
   override type M = TransitionViewModel
   override type S = TransitionDemoScene.type

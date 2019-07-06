@@ -3,16 +3,16 @@ package com.yuiwai.yachiyo.akka
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 import com.yuiwai.yachiyo.ui
-import com.yuiwai.yachiyo.ui.{Initialized, SceneCallback, StateChangedCallback}
+import com.yuiwai.yachiyo.ui.{CleanedUp, Initialized, SceneCallback, StateChangedCallback}
 
 object Scene {
   type GenScene = () => ui.Scene
   sealed trait SceneCommand[-T]
   final case class Initialize(genScene: GenScene) extends SceneCommand[Nothing]
+  case object CleanUp extends SceneCommand[Nothing]
   case object Start extends SceneCommand[Nothing]
   case object Stop extends SceneCommand[Nothing]
   final case class Execution[S <: ui.Scene](input: S#Command) extends SceneCommand[S]
-  final case class ChangeScene[S <: ui.Scene](genScene: GenScene) extends SceneCommand[S]
 
   private def deployed(scene: ui.Scene, listener: SceneCallback => Unit): Behavior[SceneCommand[_]] = {
     def make(state: scene.State): Behavior[SceneCommand[_]] = {
@@ -23,10 +23,10 @@ object Scene {
             val (newState, event, output) = scene.execute(state, input.asInstanceOf[scene.Command])
             listener(output)
             make(newState)
-          case ChangeScene(genScene) =>
-            // TODO cleanupはここではない
+          case CleanUp =>
             scene.cleanup()
-            deployed(genScene(), listener)
+            listener(CleanedUp)
+            init(listener)
           case _ =>
             // TODO other messages.
             Behaviors.same

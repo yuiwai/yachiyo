@@ -14,6 +14,7 @@ object Presenter {
 
   sealed trait PresenterCallback
   final case class Initialized(viewModel: ViewModel) extends PresenterCallback
+  case object CleanedUp extends PresenterCallback
   final case class Updated[M <: ViewModel](viewModel: ViewModel) extends PresenterCallback
 
   def deployed[S <: ui.Scene, M <: ViewModel](presenter: ui.Presenter, listener: PresenterCallback => Unit): Behaviors.Receive[PresenterCommand] = {
@@ -22,10 +23,11 @@ object Presenter {
         msg match {
           case Cleanup =>
             presenter.cleanup()
-            Behaviors.same
+            listener(CleanedUp)
+            init(listener)
           case Update(state) =>
             val viewModel = presenter.updated(state.asInstanceOf[presenter.S#State])
-            // TODO ここでViewを更新したい
+            listener(Updated(viewModel))
             Behaviors.same
           case _ =>
             // TODO other behaviors

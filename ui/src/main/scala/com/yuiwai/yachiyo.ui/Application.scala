@@ -1,14 +1,15 @@
 package com.yuiwai.yachiyo.ui
 
 trait Application {
-  type SceneKey
-  val sceneSuiteMap: Map[SceneKey, SceneSuite]
-  def initialSceneSuiteKey: SceneKey
-  def initialSceneSuite: SceneSuite = sceneSuiteMap(initialSceneSuiteKey)
+  val sceneSuiteMap: Map[Int, SceneSuite]
+  def initialSceneSuiteKey: Int
+  // TODO 存在しないキーの場合のフォロー
+  def resolve(sceneKey: Int): SceneSuite = sceneSuiteMap(sceneKey)
+  def initialSceneSuite: SceneSuite = resolve(initialSceneSuiteKey)
 }
 
-abstract class SceneSuite {
-  val genScene: () => Scene
-  val genPresenter: () => Presenter
-  val genView: () => View
-}
+case class SceneSuite(
+  genScene: () => Scene,
+  genPresenter: () => Presenter,
+  genView: () => View
+)

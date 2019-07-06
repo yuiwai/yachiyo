@@ -8,14 +8,15 @@ trait Scene {
   type State
   type Command
   type Event
+  type Result = (State, Event, SceneCallback)
   def initialState(/* TODO GlobalState */): State
-  def presenter(): Presenter[this.type] // FIXME ApplicationがSceneとPresenterの組み合わせを受け持つ?
-  def execute(state: State, input: Command): (State, Event, SceneCallback)
+  def execute(state: State, input: Command): Result
   def cleanup(): Unit
 }
 object Scene {
+  type GenScene = () => Scene
   sealed trait SceneCommand[-T]
-  final case class Initialize(scene: Scene) extends SceneCommand[Nothing]
+  final case class Initialize(genScene: GenScene) extends SceneCommand[Nothing]
   case object Start extends SceneCommand[Nothing]
   case object Stop extends SceneCommand[Nothing]
   final case class Execution[S <: Scene](input: S#Command) extends SceneCommand[S]
@@ -23,14 +24,14 @@ object Scene {
 
   sealed trait SceneCallback
   case object NoCallback extends SceneCallback
-  final case class Initialized[S <: Scene](state: S#State, presenter: Presenter[S]) extends SceneCallback
+  final case class Initialized[S <: Scene](initialState: S#State) extends SceneCallback
   final case class EventCallback(event: Scene#Event) extends SceneCallback
   final case class NextSceneCallback[S <: Scene](genScene: () => S) extends SceneCallback
-  final case class CurrentState(state: Scene#State) extends SceneCallback
+  final case class StateChangedCallback(state: Scene#State) extends SceneCallback
 
   private def deployed(scene: Scene, listener: SceneCallback => Unit): Behavior[SceneCommand[_]] = {
     def make(state: scene.State): Behavior[SceneCommand[_]] = {
-      listener(CurrentState(state))
+      listener(StateChangedCallback(state))
       Behaviors.receive[SceneCommand[_]] { (_, msg) =>
         msg match {
           case Execution(input) =>
@@ -49,14 +50,14 @@ object Scene {
     }
     {
       val state = scene.initialState()
-      listener(Initialized(state, scene.presenter()))
-      make(scene.initialState())
+      listener(Initialized(state))
+      make(state)
     }
   }
   def init(listener: SceneCallback => Unit): Behavior[SceneCommand[_]] =
     Behaviors.receive[SceneCommand[_]] { (_, msg) =>
       msg match {
-        case Initialize(scene) => deployed(scene, listener)
+        case Initialize(genScene) => deployed(genScene(), listener)
         case _ => Behaviors.same
       }
     }

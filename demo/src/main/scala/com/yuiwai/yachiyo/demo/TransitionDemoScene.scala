@@ -16,7 +16,6 @@ object TransitionDemoScene extends Scene {
   case object BackToTop extends TransitionDemoMsg
 
   override def initialState(): Boolean = false
-  override def presenter(): Presenter[TransitionDemoScene.type] = new TransitionDemoPresenter
   override def execute(state: Boolean, input: TransitionDemoMsg): (Boolean, Event, SceneCallback) = input match {
     case TogglePlaying => (!state, None, NoCallback)
     case BackToTop => (state, None, NextSceneCallback(() => TopDemoScene))
@@ -25,32 +24,17 @@ object TransitionDemoScene extends Scene {
 }
 
 // FIXME 中身をView/ViewModelに切り分ける
-class TransitionDemoPresenter extends Presenter[TransitionDemoScene.type] {
-  private val viewModel: TransitionViewModel = TransitionViewModel(playing = false, _ => (), () => ())
-  private val view = new TransitionView
-  def setup(initialState: Boolean, listener: Listener): Unit = {
-    viewModel.backToTop = _ => listener(BackToTop)
-    viewModel.togglePlayingHandler = () => listener(TogglePlaying)
-    view.setup(viewModel)
-  }
-  def updated(state: Boolean): Unit = {
-    viewModel.playing = state
-    view.draw(viewModel)
-  }
-  def cleanup(): Unit = {
-    view.cleanup()
-  }
+class TransitionDemoPresenter extends Presenter {
+  override type M = TransitionViewModel
+  override type S = TransitionDemoScene.type
+  override def updated(state: Boolean): TransitionViewModel = TransitionViewModel(state)
 }
 
-case class TransitionViewModel(
-  var playing: Boolean,
-  var backToTop: Unit => Unit,
-  var togglePlayingHandler: () => Unit
-) extends ViewModel {
-  def togglePlaying(): Unit = togglePlayingHandler()
-}
+final case class TransitionViewModel(playing: Boolean) extends ViewModel
 
-class TransitionView extends DomView[TransitionViewModel] {
+class TransitionView extends DomView {
+  override type S = TransitionDemoScene.type
+  override type M = TransitionViewModel
   private val duration = 2000
   private var divs = Seq.empty[HTMLDivElement]
   private def container = elementById("container")
@@ -67,9 +51,9 @@ class TransitionView extends DomView[TransitionViewModel] {
     t1.withExtension(CompositeExtension(SinEaseOutExtension, CycleRateExtension)),
     t1.withExtension(CompositeExtension(CycleRateExtension, SinEaseOutExtension))
   )
-  override def setup(viewModel: TransitionViewModel): Unit = {
+  override def setup(viewModel: TransitionViewModel, listener: Listener): Unit = {
     val btn = button("Back To Top")
-    btn.onclick = { _ => viewModel.backToTop() }
+    btn.onclick = _ => listener(BackToTop)
     container.appendChild(btn)
     (1 to 9).foreach { i =>
       val div = createElementAs[HTMLDivElement]("div")
@@ -84,9 +68,7 @@ class TransitionView extends DomView[TransitionViewModel] {
       container.appendChild(div)
       divs = divs :+ div
     }
-    dom.window.onclick = { _ =>
-      viewModel.togglePlaying()
-    }
+    dom.window.onclick = _ => listener(TogglePlaying)
   }
   override def cleanup(): Unit = {
     container.innerHTML = ""

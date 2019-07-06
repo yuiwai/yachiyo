@@ -3,7 +3,7 @@ package com.yuiwai.yachiyo.akka
 import org.scalajs.dom
 import org.scalajs.dom.raw.{HTMLButtonElement, HTMLElement}
 
-trait DomView[M <: ViewModel] extends View[M] {
+trait DomView extends View {
   def createElement(name: String, tap: HTMLElement => Unit = { _ => () }): HTMLElement = {
     val e = dom.document.createElement(name).asInstanceOf[HTMLElement]
     tap(e)

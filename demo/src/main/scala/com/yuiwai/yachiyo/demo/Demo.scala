@@ -1,7 +1,7 @@
 package com.yuiwai.yachiyo.demo
 
 import akka.actor.typed.ActorSystem
-import com.yuiwai.yachiyo.akka.{Application, Scene}
+import com.yuiwai.yachiyo.akka._
 
 object Demo {
   def main(args: Array[String]): Unit = {
@@ -10,5 +10,9 @@ object Demo {
 }
 
 object DemoApplication extends Application {
-  override val initialScene: Scene = TopDemoScene
+  override def initialSceneSuite: SceneSuite = new SceneSuite {
+    override val genScene: () => Scene = () => TopDemoScene
+    override val genPresenter: () => Presenter = () => new TopPresenter
+    override val genView: () => View = () => new TopView
+  }
 }

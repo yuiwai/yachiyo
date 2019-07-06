@@ -2,44 +2,39 @@ package com.yuiwai.yachiyo.demo
 
 import com.yuiwai.yachiyo.akka.Scene.{NextSceneCallback, NoCallback, SceneCallback}
 import com.yuiwai.yachiyo.akka.{DomView, Presenter, Scene, ViewModel}
+import com.yuiwai.yachiyo.demo.TopDemoScene.ToTransitionDemo
 
 object TopDemoScene extends Scene {
   override type State = None.type
-  override type Command = Int
+  override type Command = TopDemoCommand
   override type Event = None.type
-  val ToTransitionDemo = 1
+
+  sealed trait TopDemoCommand
+  case object ToTransitionDemo extends TopDemoCommand
 
   override def initialState(): None.type = None
-  override def presenter(): Presenter[TopDemoScene.this.type] = new TopPresenter
-  override def execute(state: None.type, input: Int): (None.type, Event, SceneCallback) = input match {
+  override def execute(state: None.type, input: TopDemoCommand): (None.type, Event, SceneCallback) = input match {
     case ToTransitionDemo => (None, None, NextSceneCallback(() => TransitionDemoScene))
     case _ => (None, None, NoCallback)
   }
   override def cleanup(): Unit = {}
 }
 
-class TopPresenter extends Presenter[TopDemoScene.type] {
-  private val view = new TopView
-  private var viewModel: Option[TopViewModel] = None
-  def setup(initialState: None.type, listener: Listener): Unit = {
-    viewModel = Some(TopViewModel(_ => listener(1)))
-    view.setup(viewModel.get)
-  }
-  def cleanup(): Unit = {
-    view.cleanup()
-  }
-  def updated(state: None.type): Unit = {}
+class TopPresenter extends Presenter {
+  override type S = TopDemoScene.type
+  override type M = TopViewModel
+  override def updated(state: None.type): TopViewModel = TopViewModel()
 }
 
-case class TopViewModel(
-  toTransitionDemo: Unit => Unit
-) extends ViewModel
+case class TopViewModel() extends ViewModel
 
-class TopView extends DomView[TopViewModel] {
+class TopView extends DomView {
+  override type S = TopDemoScene.type
+  override type M = TopViewModel
   private def container = elementById("container")
-  override def setup(viewModel: TopViewModel): Unit = {
+  override def setup(viewModel: M, listener: Listener): Unit = {
     val btn = button("Transition Demo")
-    btn.onclick = { _ => viewModel.toTransitionDemo() }
+    btn.onclick = _ => listener(ToTransitionDemo)
     container.appendChild(btn)
   }
   override def cleanup(): Unit = {

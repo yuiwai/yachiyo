@@ -1,24 +1,28 @@
 package com.yuiwai.yachiyo.core
 
-final case class Particle[T: Amount](pos: Pos[T], speed: Speed[T]) {
+final case class Particle[T: Amount](pos: Pos[T], speed: Speed[T], lifetime: Int = 0) {
   def accelerated(v: Force[T]): Particle[T] = copy(speed = speed + v)
-  // TODO 経過時間を制御できるように
-  def updated(): Particle[T] = copy(pos = pos + speed)
+  def updated(): Particle[T] = copy(pos = pos + speed, lifetime = lifetime + 1)
 }
 object Particle {
   def zero[T: Plus : Minus](implicit amount: Amount[T], multiply: Multiply[T, Double]): Particle[T] =
-    apply(Pos.zero, Speed.zero)
+    apply(Pos.zero, Speed.zero, 0)
 }
 
 final case class ParticleSystem[T: Amount : Plus : Minus](
-  pos: Pos[T], particles: Seq[Particle[T]], generator: Generator[ParticleSystem[T], Particle[T]])
+  pos: Pos[T],
+  lifetime: Int,
+  particles: Seq[Particle[T]],
+  generator: Generator[ParticleSystem[T], Particle[T]])
   (implicit multiply: Multiply[T, Double]) {
   def size: Int = particles.size
   def spawn(speed: Speed[T] = Speed.zero): Particle[T] = Particle(pos, speed)
-  // TODO 経過時間を制御できるように
   def updated(): ParticleSystem[T] = generator.generate(this) match {
     case (generated, gen) =>
-      copy(particles = particles.map(_.updated()) ++ generated, generator = gen)
+      copy(
+        particles = (particles.map(_.updated()) ++ generated).filter(_.lifetime < lifetime),
+        generator = gen
+      )
   }
 }
 

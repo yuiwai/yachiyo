@@ -34,6 +34,7 @@ class ParticleDemoView extends CanvasView with CommonView {
   override type M = ParticleDemoViewModel
   private var system = ParticleSystem[Double](
     Pos(250.0, 250.0),
+    1000,
     Seq.empty,
     Generator(
       s => s.spawn(Speed(0, -.2) * Angle.random(-45, 45)), 10)

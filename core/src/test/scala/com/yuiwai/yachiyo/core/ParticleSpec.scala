@@ -6,6 +6,7 @@ object ParticleSpec extends TestSuite {
   val tests = Tests {
     val system = ParticleSystem[Int](
       Pos.zero,
+      0,
       Seq.empty,
       Generator(_ => Particle.zero[Int], 10, 1))
     "spawn" - {
@@ -25,10 +26,9 @@ object ParticleSpec extends TestSuite {
       p1.accelerated(Force(1, 2)).updated().speed ==> Speed(1, 2)
     }
     "updated" - {
-      val p1 = Particle[Int](Pos.zero, Speed.zero)
-      p1.updated() ==> p1
+      val p1 = Particle[Int](Pos.zero, Speed.zero, 0)
       p1.accelerated(Force(1, 2)).updated() match {
-        case Particle(p, _) => p ==> Pos(1, 2)
+        case Particle(p, _, _) => p ==> Pos(1, 2)
       }
     }
     "angle" - {
@@ -36,7 +36,10 @@ object ParticleSpec extends TestSuite {
       Speed(1, 0) * Angle.fromDegree(90) ==> Speed(0, 1)
     }
     "lifetime" - {
-
+      val p1 = Particle[Int](Pos.zero, Speed.zero, 0)
+      p1.updated() match {
+        case Particle(_, _, lifetime) => lifetime ==> 1
+      }
     }
   }
 }

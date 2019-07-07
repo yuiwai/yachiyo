@@ -1,15 +1,31 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-version in ThisBuild := "0.1"
-
+version in ThisBuild := "0.1.0"
 scalaVersion in ThisBuild := "2.12.8"
+organization in ThisBuild := "com.yuiwai"
+scalacOptions in ThisBuild ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-Xlint",
+)
+
+lazy val root = project
+  .in(file("."))
+  .aggregate(coreJVM, coreJS, uiJVM, uiJS, akkaJVM, akkaJS)
+  .settings(
+    name := "yachiyo",
+    publish := {},
+    publishLocal := {}
+  )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("core"))
   .settings(
     name := "yachiyo-core",
-    testFrameworks += new TestFramework("utest.runner.Framework")
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+    publishTo := Some(Resolver.file("file", file("release")))
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
@@ -29,7 +45,8 @@ lazy val coreJS = core.js
 lazy val ui = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
-    name := "yachiyo-ui"
+    name := "yachiyo-ui",
+    publishTo := Some(Resolver.file("file", file("release")))
   )
   .dependsOn(core)
 
@@ -39,7 +56,8 @@ lazy val uiJVM = ui.jvm
 lazy val akka = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
-    name := "yachiyo-akka"
+    name := "yachiyo-akka",
+    publishTo := Some(Resolver.file("file", file("release")))
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
@@ -54,7 +72,7 @@ lazy val akka = crossProject(JSPlatform, JVMPlatform)
   )
   .dependsOn(ui)
 
-lazy val akkJVM = akka.jvm
+lazy val akkaJVM = akka.jvm
 lazy val akkaJS = akka.js
 
 lazy val demo = project

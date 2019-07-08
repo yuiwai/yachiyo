@@ -8,7 +8,8 @@ object ParticleSpec extends TestSuite {
       Pos.zero,
       0,
       Seq.empty,
-      Generator(_ => Particle.zero[Int], 10, 1))
+      Generator(_ => Particle.zero[Int], 10, 1),
+      Gravity.zero)
     "spawn" - {
       system.spawn().pos ==> Pos.zero[Int]
     }
@@ -40,6 +41,12 @@ object ParticleSpec extends TestSuite {
       p1.updated() match {
         case Particle(_, _, lifetime) => lifetime ==> 1
       }
+    }
+    "gravity" - {
+      val g0 = Gravity.zero[Int]
+      val g1 = Gravity(1, Angle.down)
+      g0(Speed.zero[Int]) ==> Speed.zero[Int]
+      g1(Speed.zero[Int]) ==> Speed(0, -1)
     }
   }
 }

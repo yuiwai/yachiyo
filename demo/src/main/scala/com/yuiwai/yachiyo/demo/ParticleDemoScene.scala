@@ -36,8 +36,8 @@ class ParticleDemoView extends CanvasView with CommonView {
     Pos(250.0, 250.0),
     1000,
     Seq.empty,
-    Generator(
-      s => s.spawn(Speed(0, -.2) * Angle.random(-45, 45)), 10)
+    Generator(s => s.spawn(Speed(0, -.2) * Angle.random(-45, 45)), 10),
+    Gravity.zero
   )
   private var playing = true
   override def setup(viewModel: ParticleDemoViewModel, listener: Listener): Unit = {

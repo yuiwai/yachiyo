@@ -81,8 +81,10 @@ lazy val demo = project
   .enablePlugins(ScalaJSPlugin)
   .settings(
     name := "yachiyo-demo",
+    resolvers += "yuiwai repo" at "https://s3-us-west-2.amazonaws.com/repo.yuiwai.com",
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+      "com.yuiwai" %%% "kasumi-core" % "0.2.0-SNAPSHOT"
     ),
     scalaJSUseMainModuleInitializer := true
   )

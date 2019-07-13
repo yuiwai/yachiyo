@@ -92,3 +92,13 @@ lazy val demo = project
     ),
     scalaJSUseMainModuleInitializer := true
   )
+
+lazy val fx = project
+  .in(file("fx"))
+  .settings(
+    name := "yachiyo-fx",
+    libraryDependencies ++= Seq(
+      "org.scalafx" %% "scalafx" % "8.0.192-R14"
+    )
+  )
+  .dependsOn(uiJVM)

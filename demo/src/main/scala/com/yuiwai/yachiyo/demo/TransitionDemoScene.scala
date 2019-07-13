@@ -15,7 +15,7 @@ object TransitionDemoScene extends Scene {
   case object TogglePlaying extends TransitionDemoMsg
   case object BackToTop extends TransitionDemoMsg
 
-  override def initialState(): Boolean = false
+  override def initialState(): Boolean = true
   override def execute(state: Boolean, input: TransitionDemoMsg): (Boolean, Event, SceneCallback) = input match {
     case TogglePlaying => (!state, None, NoCallback)
     case BackToTop => (state, None, NextSceneCallback(DemoApplication.TopSceneKey))

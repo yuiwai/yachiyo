@@ -64,3 +64,7 @@ object Angle {
   def random(fromDeg: Int, toDeg: Int): Angle = fromDegree(fromDeg + ((toDeg - fromDeg) * Math.random()).toInt)
 }
 
+// TODO impl
+trait Steering {
+
+}

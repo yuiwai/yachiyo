@@ -1,4 +1,4 @@
-package com.yuiwai.yachiyo.akka
+package com.yuiwai.yachiyo.ui
 
 import com.yuiwai.yachiyo.ui
 import org.scalajs.dom

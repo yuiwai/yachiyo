@@ -48,6 +48,11 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
     name := "yachiyo-ui",
     publishTo := Some(Resolver.file("file", file("release")))
   )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+    )
+  )
   .dependsOn(core)
 
 lazy val uiJS = ui.js
@@ -66,8 +71,7 @@ lazy val akka = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "org.akka-js" %%% "akkajsactortyped" % "1.2.5.21",
-      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+      "org.akka-js" %%% "akkajsactortyped" % "1.2.5.21"
     )
   )
   .dependsOn(ui)

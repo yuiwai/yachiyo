@@ -1,6 +1,5 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.DomView
 import com.yuiwai.yachiyo.core._
 import com.yuiwai.yachiyo.demo.TransitionDemoScene.{BackToTop, TogglePlaying}
 import com.yuiwai.yachiyo.ui._

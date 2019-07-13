@@ -1,6 +1,5 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.CanvasView
 import com.yuiwai.yachiyo.core._
 import com.yuiwai.yachiyo.demo.ParticleDemoScene.BackToTop
 import com.yuiwai.yachiyo.ui._

@@ -1,6 +1,5 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.DomView
 import com.yuiwai.yachiyo.demo.TopDemoScene.{ToNodeDemo, ToParticleDemo, ToTransitionDemo}
 import com.yuiwai.yachiyo.ui._
 

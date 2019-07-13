@@ -1,7 +1,6 @@
 package com.yuiwai.yachiyo.demo
 
 import com.yuiwai.kasumi.core.implementation.{Node, TypedBoard}
-import com.yuiwai.yachiyo.akka.DomView
 import com.yuiwai.yachiyo.core.Pos
 import com.yuiwai.yachiyo.demo.NodeDemoScene.BackToTop
 import com.yuiwai.yachiyo.ui._

@@ -71,10 +71,10 @@ object ShutterSpec extends TestSuite {
     }
     "aggregator" - {
       "sum" - {
-        Aggregator.sum(1 :: 2 :: 3 :: Nil) ==> 6
+        Aggregation.sum(1 :: 2 :: 3 :: Nil) ==> 6
       }
       "average" - {
-        Aggregator.avg(1 :: 2 :: 3 :: Nil) ==> 2
+        Aggregation.avg(1 :: 2 :: 3 :: Nil) ==> 2
       }
     }
   }

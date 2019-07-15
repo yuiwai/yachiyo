@@ -1,6 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-version in ThisBuild := "0.1.0"
+version in ThisBuild := "0.2.0"
 scalaVersion in ThisBuild := "2.12.8"
 organization in ThisBuild := "com.yuiwai"
 scalacOptions in ThisBuild ++= Seq(
@@ -15,8 +15,7 @@ lazy val root = project
   .aggregate(coreJVM, coreJS, uiJVM, uiJS, akkaJVM, akkaJS)
   .settings(
     name := "yachiyo",
-    publish := {},
-    publishLocal := {}
+    publish / skip := true
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
@@ -48,6 +47,11 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
     name := "yachiyo-ui",
     publishTo := Some(Resolver.file("file", file("release")))
   )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+    )
+  )
   .dependsOn(core)
 
 lazy val uiJS = ui.js
@@ -66,8 +70,7 @@ lazy val akka = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "org.akka-js" %%% "akkajsactortyped" % "1.2.5.21",
-      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+      "org.akka-js" %%% "akkajsactortyped" % "1.2.5.21"
     )
   )
   .dependsOn(ui)
@@ -81,8 +84,20 @@ lazy val demo = project
   .enablePlugins(ScalaJSPlugin)
   .settings(
     name := "yachiyo-demo",
+    resolvers += "yuiwai repo" at "https://s3-us-west-2.amazonaws.com/repo.yuiwai.com",
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+      "com.yuiwai" %%% "kasumi-core" % "0.2.0-SNAPSHOT"
     ),
     scalaJSUseMainModuleInitializer := true
   )
+
+lazy val fx = project
+  .in(file("fx"))
+  .settings(
+    name := "yachiyo-fx",
+    libraryDependencies ++= Seq(
+      "org.scalafx" %% "scalafx" % "8.0.192-R14"
+    )
+  )
+  .dependsOn(uiJVM)

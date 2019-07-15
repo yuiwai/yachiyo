@@ -1,6 +1,5 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.DomView
 import com.yuiwai.yachiyo.core._
 import com.yuiwai.yachiyo.demo.TransitionDemoScene.{BackToTop, TogglePlaying}
 import com.yuiwai.yachiyo.ui._
@@ -15,7 +14,7 @@ object TransitionDemoScene extends Scene {
   case object TogglePlaying extends TransitionDemoMsg
   case object BackToTop extends TransitionDemoMsg
 
-  override def initialState(): Boolean = false
+  override def initialState(): Boolean = true
   override def execute(state: Boolean, input: TransitionDemoMsg): (Boolean, Event, SceneCallback) = input match {
     case TogglePlaying => (!state, None, NoCallback)
     case BackToTop => (state, None, NextSceneCallback(DemoApplication.TopSceneKey))
@@ -37,7 +36,7 @@ class TransitionView extends DomView with CommonView {
   private val duration = 2000
   private var divs = Seq.empty[HTMLDivElement]
   private var playing = false
-  private val t1 = Transition(0, 500, Progress(0, duration, 0))
+  private val t1 = Transition(0, 300, Progress(0, duration, 0))
   private val transitions = Seq(
     t1,
     t1.withExtension(SinEaseInExtension),

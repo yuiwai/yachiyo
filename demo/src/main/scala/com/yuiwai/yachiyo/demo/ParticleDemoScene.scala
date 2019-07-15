@@ -1,6 +1,5 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.CanvasView
 import com.yuiwai.yachiyo.core._
 import com.yuiwai.yachiyo.demo.ParticleDemoScene.BackToTop
 import com.yuiwai.yachiyo.ui._
@@ -32,12 +31,17 @@ final case class ParticleDemoViewModel() extends ViewModel
 class ParticleDemoView extends CanvasView with CommonView {
   override type S = ParticleDemoScene.type
   override type M = ParticleDemoViewModel
+  val canvasWidth = 300
+  val canvasHeight = 300
+  val lifeTime = 2000
+  val initialSpeed = Speed(0, -2.0)
+  val initialGravity = Gravity(Force(0, .01))
   private var system = ParticleSystem[Double](
-    Pos(250.0, 250.0),
-    1000,
+    Pos(canvasWidth / 2, canvasHeight / 2),
+    lifeTime,
     Seq.empty,
-    Generator(
-      s => s.spawn(Speed(0, -.2) * Angle.random(-45, 45)), 10)
+    Generator(s => s.spawn(initialSpeed * Angle.random(-45, 45))),
+    initialGravity
   )
   private var playing = true
   override def setup(viewModel: ParticleDemoViewModel, listener: Listener): Unit = {
@@ -45,7 +49,7 @@ class ParticleDemoView extends CanvasView with CommonView {
     btn.onclick = _ => listener(BackToTop)
     container.appendChild(div(btn))
 
-    val canvas = createCanvas(500, 500)
+    val canvas = createCanvas(canvasWidth, canvasHeight)
     container.appendChild(canvas)
 
     animation(0)(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
@@ -59,7 +63,7 @@ class ParticleDemoView extends CanvasView with CommonView {
     system = system.updated()
     ctx.beginPath()
     ctx.fillStyle = "black"
-    ctx.fillRect(0, 0, 500, 500)
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
     system.particles.foreach { p =>
       import p.pos
       ctx.beginPath()

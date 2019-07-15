@@ -1,10 +1,11 @@
-package com.yuiwai.yachiyo.akka
+package com.yuiwai.yachiyo.ui
 
 import com.yuiwai.yachiyo.ui
 import org.scalajs.dom
 import org.scalajs.dom.raw.{HTMLButtonElement, HTMLDivElement, HTMLElement}
 
 trait DomView extends ui.View {
+  def px(i: Int): String = s"${i}px"
   def div(elems: HTMLElement*): HTMLDivElement = {
     createElementAs[HTMLDivElement]("div", { e =>
       elems.foreach(e.appendChild(_))
@@ -22,4 +23,11 @@ trait DomView extends ui.View {
   }
   def elementById(id: String): HTMLElement = dom.document.getElementById(id).asInstanceOf[HTMLElement]
   def button(text: String): HTMLButtonElement = createElementAs[HTMLButtonElement]("button", _.innerText = text)
+
+  implicit class HTMLElementWrap(element: HTMLElement) {
+    def tap(f: HTMLElement => Unit): HTMLElement = {
+      f(element)
+      element
+    }
+  }
 }

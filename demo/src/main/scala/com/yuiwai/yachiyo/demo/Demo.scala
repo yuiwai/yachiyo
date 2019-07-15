@@ -14,6 +14,7 @@ object DemoApplication extends Application {
   val TopSceneKey = 1
   val TransitionSceneKey = 2
   val ParticleSceneKey = 3
+  val NodeSceneKey = 4
   override def initialSceneSuiteKey: Int = TopSceneKey
   override val sceneSuiteMap: Map[Int, SceneSuite] = Map(
     TopSceneKey -> SceneSuite(
@@ -29,7 +30,12 @@ object DemoApplication extends Application {
     ParticleSceneKey -> SceneSuite(
       () => ParticleDemoScene,
       () => new ParticleDemoPresenter,
-      () => new ParticleDemoView,
+      () => new ParticleDemoView
+    ),
+    NodeSceneKey -> SceneSuite(
+      () => NodeDemoScene,
+      () => new NodeDemoPresenter,
+      () => new NodeDemoView
     )
   )
 }

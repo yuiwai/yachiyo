@@ -1,6 +1,6 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.akka.DomView
+import com.yuiwai.yachiyo.ui.DomView
 
 trait CommonScene {
 

@@ -36,7 +36,7 @@ class TransitionView extends DomView with CommonView {
   private val duration = 2000
   private var divs = Seq.empty[HTMLDivElement]
   private var playing = false
-  private val t1 = Transition(0, 500, Progress(0, duration, 0))
+  private val t1 = Transition(0, 300, Progress(0, duration, 0))
   private val transitions = Seq(
     t1,
     t1.withExtension(SinEaseInExtension),

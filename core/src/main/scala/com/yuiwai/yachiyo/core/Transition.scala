@@ -22,6 +22,7 @@ trait Multiply[T, V] {
 }
 object Multiply {
   implicit val intDouble: Multiply[Int, Double] = { (i, d) => (i * d).toInt }
+  implicit val intInt: Multiply[Int, Int] = _ * _
   implicit val doubleDouble: Multiply[Double, Double] = _ * _
 }
 trait Minus[T] {

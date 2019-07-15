@@ -1,6 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-version in ThisBuild := "0.2.0-SNAPSHOT"
+version in ThisBuild := "0.2.0"
 scalaVersion in ThisBuild := "2.12.8"
 organization in ThisBuild := "com.yuiwai"
 scalacOptions in ThisBuild ++= Seq(
@@ -15,8 +15,7 @@ lazy val root = project
   .aggregate(coreJVM, coreJS, uiJVM, uiJS, akkaJVM, akkaJS)
   .settings(
     name := "yachiyo",
-    publish := {},
-    publishLocal := {}
+    publish / skip := true
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)

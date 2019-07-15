@@ -4,7 +4,7 @@ import com.yuiwai.yachiyo.core._
 import com.yuiwai.yachiyo.demo.ParticleDemoScene.BackToTop
 import com.yuiwai.yachiyo.ui._
 import org.scalajs.dom
-import org.scalajs.dom.raw.CanvasRenderingContext2D
+import org.scalajs.dom.raw.{CanvasRenderingContext2D, ImageData}
 
 object ParticleDemoScene extends Scene {
   override type State = Set[Particle[Int]]
@@ -36,6 +36,7 @@ class ParticleDemoView extends CanvasView with CommonView {
   val lifeTime = 2000
   val initialSpeed = Speed(0, -2.0)
   val initialGravity = Gravity(Force(0, .01))
+  private var prev: Option[ImageData] = None
   private var system = ParticleSystem[Double](
     Pos(canvasWidth / 2, canvasHeight / 2),
     lifeTime,
@@ -71,6 +72,18 @@ class ParticleDemoView extends CanvasView with CommonView {
       ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2, false)
       ctx.fill()
     }
+
+    // filter
+    import com.yuiwai.yachiyo.ui.CanvasView.ImageDataWrap
+    val data = ctx.getImageData(0, 0, canvasWidth, canvasHeight)
+    prev.foreach { pre =>
+      data.pixels
+        .foreach { p =>
+          p.get(pre).foreach(c => p.mod(data, _.mix(c, 1.1)))
+        }
+      ctx.putImageData(data, 0, 0, 0, 0, canvasWidth, canvasHeight)
+    }
+    prev = Some(ctx.getImageData(0, 0, canvasWidth, canvasHeight))
     if (playing) dom.window.requestAnimationFrame(animation(_))
   }
 }

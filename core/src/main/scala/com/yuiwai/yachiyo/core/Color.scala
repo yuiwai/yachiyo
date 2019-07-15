@@ -9,6 +9,9 @@ final case class RGB(r: Int, g: Int, b: Int) extends Color {
       case s => s
     })
     .mkString
+  def inverted: RGB = RGB(255 - r, 255 - g, 255 - b)
+  def mix(that: RGB, rate: Double): RGB =
+    RGB(((r + that.r) / rate).toInt, ((g + that.g) / rate).toInt, ((b + that.b) / rate).toInt)
 }
 
 final case class HLS(h: Int, l: Int, s: Int) extends Color

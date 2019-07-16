@@ -7,7 +7,7 @@ trait Scene {
   type Result = (State, Event, SceneCallback)
   def initialState(/* TODO GlobalState */): State
   def execute(state: State, input: Command): Result
-  def cleanup(): Unit
+  def cleanup(): Unit = {}
 }
 
 sealed trait SceneCallback

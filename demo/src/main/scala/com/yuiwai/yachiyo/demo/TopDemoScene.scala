@@ -3,6 +3,8 @@ package com.yuiwai.yachiyo.demo
 import com.yuiwai.yachiyo.demo.TopDemoScene.{ToNodeDemo, ToParticleDemo, ToTransitionDemo}
 import com.yuiwai.yachiyo.ui._
 
+import scala.None
+
 object TopDemoScene extends Scene {
   override type State = None.type
   override type Command = TopDemoCommand
@@ -26,7 +28,7 @@ object TopDemoScene extends Scene {
 class TopPresenter extends Presenter {
   override type S = TopDemoScene.type
   override type M = TopViewModel
-  override def updated(state: None.type): TopViewModel = TopViewModel()
+  override def updated(state: None.type, prevModel: Prev): TopViewModel = TopViewModel()
 }
 
 case class TopViewModel() extends ViewModel

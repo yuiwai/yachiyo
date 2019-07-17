@@ -43,22 +43,17 @@ object Application {
             case Presenter.Updated(viewModel) =>
               viewRef ! View.Update(viewModel)
               Behaviors.same
-            case Presenter.CleanedUp =>
-              Behaviors.same
+            case Presenter.CleanedUp => Behaviors.same
           }
         case ViewCallbackWrap(msg) =>
           msg match {
-            case View.Initialized =>
-              Behaviors.same
+            case View.Initialized => Behaviors.same
             case View.ExecutionCallback(command) =>
               sceneRef ! command
               Behaviors.same
-            case View.CleanedUp =>
-              Behaviors.same
+            case View.CleanedUp => Behaviors.same
           }
-        case _ =>
-          // TODO implement other cases.
-          Behaviors.same
+        case _ => Behaviors.same
       }
     }
 

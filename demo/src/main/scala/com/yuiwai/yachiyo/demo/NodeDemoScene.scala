@@ -2,6 +2,7 @@ package com.yuiwai.yachiyo.demo
 
 import com.yuiwai.kasumi.core.implementation.{Node, TypedBoard, TypedEdge}
 import com.yuiwai.yachiyo.core.Pos
+import com.yuiwai.yachiyo.demo.NodeDemoScene.NodeDemoState
 import com.yuiwai.yachiyo.ui._
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
@@ -59,7 +60,8 @@ object NodeDemoScene extends Scene {
 final class NodeDemoPresenter extends Presenter {
   override type S = NodeDemoScene.type
   override type M = NodeDemoViewModel
-  override def updated(state: NodeDemoScene.NodeDemoState): NodeDemoViewModel = NodeDemoViewModel(state.board, state.currentPos)
+  override def updated(state: NodeDemoState, prevModel: Prev): NodeDemoViewModel =
+    NodeDemoViewModel(state.board, state.currentPos)
 }
 
 final case class NodeDemoViewModel(board: TypedBoard[Pos[Int]], currentPos: Pos[Int]) extends ViewModel

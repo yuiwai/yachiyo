@@ -25,7 +25,7 @@ object TransitionDemoScene extends Scene {
 class TransitionDemoPresenter extends Presenter {
   override type M = TransitionViewModel
   override type S = TransitionDemoScene.type
-  override def updated(state: Boolean): TransitionViewModel = TransitionViewModel(state)
+  override def updated(state: Boolean, prevModel: Prev): TransitionViewModel = TransitionViewModel(state)
 }
 
 final case class TransitionViewModel(playing: Boolean) extends ViewModel

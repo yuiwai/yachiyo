@@ -41,13 +41,25 @@ object ParticleDemoScene extends Scene {
 class ParticleDemoPresenter extends Presenter {
   override type S = ParticleDemoScene.type
   override type M = ParticleDemoViewModel
-  override def updated(state: ParticleDemoState): ParticleDemoViewModel =
-    ParticleDemoViewModel(useBlur = state.useBlur, state.system.particles)
+  override def usePrevModel: Boolean = true
+  override def updated(state: ParticleDemoState, prevModel: Prev): ParticleDemoViewModel = {
+    val additional: Seq[ParticleViewModel] = prevModel.map(_.particles.collect {
+      case p if p.alpha > 0 => p.copy(alpha = p.alpha - 0.1)
+    }).getOrElse(Seq.empty)
+    ParticleDemoViewModel(
+      useBlur = state.useBlur,
+      state.system.particles.map(ParticleViewModel(_)) ++ additional
+    )
+  }
 }
 
+final case class ParticleViewModel(x: Double, y: Double, alpha: Double)
+object ParticleViewModel {
+  def apply(p: Particle[Double]): ParticleViewModel = apply(p.pos.x, p.pos.y, 1.0)
+}
 final case class ParticleDemoViewModel(
   useBlur: Boolean,
-  particles: Seq[Particle[Double]]
+  particles: Seq[ParticleViewModel]
 ) extends ViewModel
 
 class ParticleDemoView extends CanvasView with CommonView {
@@ -82,16 +94,15 @@ class ParticleDemoView extends CanvasView with CommonView {
     prev = None
     playing = false
   }
-  private def animation(particles: Seq[Particle[Double]], useBlur: Boolean): Unit = {
+  private def animation(particles: Seq[ParticleViewModel], useBlur: Boolean): Unit = {
     ctx2d.foreach { ctx =>
       ctx.beginPath()
       ctx.fillStyle = "black"
       ctx.fillRect(0, 0, canvasWidth, canvasHeight)
       particles.foreach { p =>
-        import p.pos
         ctx.beginPath()
-        ctx.fillStyle = "rgba(255,255,255,.5)"
-        ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2, anticlockwise = false)
+        ctx.fillStyle = s"rgba(255,255,255,${p.alpha})"
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2, anticlockwise = false)
         ctx.fill()
       }
 

@@ -71,9 +71,6 @@ object TransitionSpec extends TestSuite {
         t.value ==> RGB(0, 0, 0)
         t.past(100).value ==> RGB(255, 100, 50)
         t.past(50).value ==> RGB(127, 50, 25)
-
-        RGB(0, 0, 0).toHexString ==> "000000"
-        RGB(255, 255, 255).toHexString ==> "ffffff"
       }
     }
   }

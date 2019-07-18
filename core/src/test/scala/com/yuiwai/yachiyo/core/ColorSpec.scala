@@ -14,6 +14,10 @@ object ColorSpec extends TestSuite {
         c.g ==> 10
         c.b ==> 33
       }
+      "map/map2" - {
+        RGB.White.map(_ / 2) ==> RGB(127, 127, 127)
+        RGB.White.map2(RGB.Black)(_ + _) ==> RGB.White
+      }
       "toHex" - {
         RGB.Black.toHexString ==> "000000"
         RGB.White.toHexString ==> "ffffff"
@@ -27,10 +31,27 @@ object ColorSpec extends TestSuite {
         RGB.White.mix(RGB.Black) ==> RGB(127, 127, 127)
       }
       "add" - {
+        RGB.Black + RGB.Black ==> RGB.Black
+        RGB.White + RGB.White ==> RGB.White
+        RGB(123, 100, 50) + RGB(123, 100, 250) ==> RGB(246, 200, 255)
       }
       "sub" - {
+        RGB.White - RGB.White ==> RGB.Black
+        RGB.White - RGB.Black ==> RGB.White
+        RGB(123, 101, 50) - RGB(123, 100, 250) ==> RGB(0, 1, 0)
       }
       "multiply" - {
+        RGB.White * RGB.White ==> RGB.White
+        RGB.White * RGB.Black ==> RGB.Black
+        RGB(100, 100, 100) * RGB(128, 255, 0) ==> RGB(50, 100, 0)
+      }
+      "max" - {
+        RGB.White.max(RGB.Black) ==> RGB.White
+        RGB(100, 20, 50).max(RGB(80, 90, 100)) ==> RGB(100, 90, 100)
+      }
+      "min" - {
+        RGB.White.min(RGB.Black) ==> RGB.Black
+        RGB(100, 20, 50).min(RGB(80, 90, 100)) ==> RGB(80, 20, 50)
       }
     }
   }

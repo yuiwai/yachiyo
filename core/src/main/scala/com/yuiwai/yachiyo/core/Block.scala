@@ -25,7 +25,7 @@ trait Block[T] {
   def find(f: T => Boolean): Option[T]
   def rotateR: Block[T]
   def rotateL: Block[T]
-  def +(that: Block[T])(implicit add: Add[T]): Option[Block[T]]
+  def +(that: Block[T])(implicit plus: Plus[T]): Option[Block[T]]
 }
 case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T] {
   override def map[U](f: T => U): Block[U] = BlockImpl(width, height, values.map(f))
@@ -51,9 +51,9 @@ case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T
     copy(values = for {x <- 0 until width; y <- 1 to height} yield values(x + (height - y) * width))
   override def rotateL: Block[T] =
     copy(values = for {x <- 1 to width; y <- 0 until height} yield values(width - x + y * width))
-  override def +(that: Block[T])(implicit add: Add[T]): Option[Block[T]] =
+  override def +(that: Block[T])(implicit plus: Plus[T]): Option[Block[T]] =
     if (width != that.width || height != that.height) None
-    else Some(copy(values = values.zip(that.values).map(t => add(t._1, t._2))))
+    else Some(copy(values = values.zip(that.values).map(t => plus(t._1, t._2))))
 }
 
 class BlockIterator[T](block: Block[T], pos: Int) {

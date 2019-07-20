@@ -5,7 +5,7 @@ import utest._
 object ChainSpec extends TestSuite {
   val tests = Tests {
     "chain" - {
-      val c1 = Anchor[Pos[Float], Pos[Float]](Pos(2f, 2f)).chain(Pos.zero)
+      val c1 = Anchor[Pos[Float], Pos[Float]](Pos(2f, 2f)).chain(Pos.zero[Float])
       c1.size ==> 1
       c1.head ==> Pos(2, 2)
 

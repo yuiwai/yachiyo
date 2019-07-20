@@ -21,6 +21,9 @@ object BlockSpec extends TestSuite {
       "fillWithPos" - {
         Block.fillWithPos(2, 2)(identity).values ==> Seq(Pos(0, 0), Pos(1, 0), Pos(0, 1), Pos(1, 1))
       }
+      "fillWithDistance" - {
+        Block.fillWithDistance(2, 2)(d => (d * 10).toInt).values ==> Seq(7, 15, 15, 21)
+      }
       "fillZero" - {
         // TODO webglがマージされたら対応
         // Block.fillZero[Int](2, 2).values ==> Seq(0, 0, 0, 0)
@@ -97,6 +100,16 @@ object BlockSpec extends TestSuite {
     "find" - {
       Block.fillWithIndex(2, 2)(identity).find(_ % 2 == 1) ==> Some(1)
       Block.fillWithIndex(2, 2)(identity).find(_ == 10) ==> None
+    }
+    "rotate" - {
+      Block.fillWithIndex(2, 2)(identity).rotateR.values ==> Seq(2, 0, 3, 1)
+      Block.fillWithIndex(2, 2)(identity).rotateL.values ==> Seq(1, 3, 0, 2)
+    }
+    "add" - {
+      Block.fill(2, 2, 1) + Block.fill(2, 2, 2) ==>
+        Some(Block.fill(2, 2, 3))
+      Block.fill(2, 2, 1.0) + Block.fill(2, 2, 2.0) ==>
+        Some(Block.fill(2, 2, 3.0))
     }
     "expansion" - {
     }

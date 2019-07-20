@@ -23,6 +23,9 @@ trait Block[T] {
   def flipX: Block[T]
   def flipY: Block[T]
   def find(f: T => Boolean): Option[T]
+  def rotateR: Block[T]
+  def rotateL: Block[T]
+  def +(that: Block[T])(implicit add: Add[T]): Option[Block[T]]
 }
 final case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T] {
   override def map[U](f: T => U): Block[U] = BlockImpl(width, height, values.map(f))
@@ -44,6 +47,13 @@ final case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends B
   override def flipX: Block[T] = copy(values = values.grouped(width).flatMap(_.reverse).toList)
   override def flipY: Block[T] = copy(values = values.grouped(width).toList.reverse.flatten)
   override def find(f: T => Boolean): Option[T] = values.find(f)
+  override def rotateR: Block[T] =
+    copy(values = for {x <- 0 until width; y <- 1 to height} yield values(x + (height - y) * width))
+  override def rotateL: Block[T] =
+    copy(values = for {x <- 1 to width; y <- 0 until height} yield values(width - x + y * width))
+  override def +(that: Block[T])(implicit add: Add[T]): Option[Block[T]] =
+    if (width != that.width || height != that.height) None
+    else Some(copy(values = values.zip(that.values).map(t => add(t._1, t._2))))
 }
 
 class BlockIterator[T](block: Block[T], pos: Int) {
@@ -60,6 +70,8 @@ object Block {
     BlockImpl(width, height, Seq.tabulate(width * height)(gen))
   def fillWithPos[T](width: Int, height: Int)(gen: Pos[Int] => T): Block[T] =
     fillWithIndex(width, height) { i => gen(Pos(i % width, i / width)) }
+  def fillWithDistance[T](width: Int, height: Int)(gen: Double => T): Block[T] =
+    fillWithPos(width, height)(p => gen(Math.sqrt((p.x + .5) * (p.x + .5) + (p.y + .5) * (p.y + .5))))
   // def fillZero[T](width: Int, height: Int)(implicit z: Zero[T]): Block[T] =
 }
 

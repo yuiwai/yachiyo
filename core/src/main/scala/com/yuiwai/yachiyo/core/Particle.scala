@@ -2,14 +2,14 @@ package com.yuiwai.yachiyo.core
 
 final case class Particle[T: Amount](pos: Pos[T], speed: Speed[T], lifetime: Int = 0) {
   def accelerated(v: Force[T]): Particle[T] = copy(speed = speed + v)
-  def updated(): Particle[T] = copy(pos = pos + speed, lifetime = lifetime + 1)
+  def updated()(implicit plus: Plus[T]): Particle[T] = copy(pos = pos + speed, lifetime = lifetime + 1)
 }
 object Particle {
-  def zero[T: Plus : Minus](implicit amount: Amount[T], multiply: Multiply[T, Double]): Particle[T] =
+  def zero[T: Plus : Minus : Zero](implicit amount: Amount[T], multiply: Multiply[T, Double]): Particle[T] =
     apply(Pos.zero, Speed.zero)
 }
 
-final case class ParticleSystem[T: Amount : Plus : Minus](
+final case class ParticleSystem[T: Amount : Plus : Minus : Zero](
   pos: Pos[T],
   lifetime: Int,
   particles: Seq[Particle[T]],
@@ -39,7 +39,7 @@ final case class Gravity[T](force: Force[T]) {
   def apply(speed: Speed[T]): Speed[T] = speed + force
 }
 object Gravity {
-  def zero[T: Amount]: Gravity[T] = apply(Force.zero[T])
+  def zero[T: Amount : Zero]: Gravity[T] = apply(Force.zero[T])
   def apply[T: Amount](value: T, angle: Angle)(implicit multiply: Multiply[T, Double]): Gravity[T] =
     apply(Force(multiply(value, angle.cos), multiply(value, angle.sin)))
 }
@@ -54,12 +54,12 @@ final case class Speed[T: Amount](x: T, y: T)
     )
 }
 object Speed {
-  def zero[T: Plus : Minus](implicit amount: Amount[T], multiply: Multiply[T, Double]): Speed[T] =
+  def zero[T: Plus : Minus : Zero](implicit amount: Amount[T], multiply: Multiply[T, Double]): Speed[T] =
     apply(amount.zero, amount.zero)
 }
 final case class Force[T: Amount](x: T, y: T) extends Vector2D[T]
 object Force {
-  def zero[T](implicit amount: Amount[T]): Force[T] = apply(amount.zero, amount.zero)
+  def zero[T: Zero](implicit amount: Amount[T]): Force[T] = apply(amount.zero, amount.zero)
 }
 abstract class Vector2D[T](implicit val amount: Amount[T]) {
   val x: T

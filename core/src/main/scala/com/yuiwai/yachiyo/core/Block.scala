@@ -9,7 +9,6 @@ trait Block[T] {
   def indexToPos(index: Int): P = Pos(index % width, index / width)
   val values: Seq[T]
   def valuesWithPos: Seq[(P, T)] = values.zipWithIndex.map { case (v, i) => indexToPos(i) -> v }
-  def withValues[V](w: Int, values: Seq[V]): Block[V]
   def map[U](f: T => U): Block[U]
   def iterator: BlockIterator[T] = new BlockIterator[T](this, 0)
   def foreach(f: T => Unit): Unit = values.foreach(f)
@@ -29,8 +28,6 @@ trait Block[T] {
   def +(that: Block[T])(implicit plus: Plus[T]): Option[Block[T]]
 }
 case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T] {
-  override def withValues[V](w: Int, values: Seq[V]): Block[V] =
-    copy(width = w, height = values.size / w, values = values)
   override def map[U](f: T => U): Block[U] = BlockImpl(width, height, values.map(f))
   override def row(index: Int): Option[Row[T]] =
     if (index < 0 || index >= height) None
@@ -79,6 +76,7 @@ object Block {
     fillWithIndex(width, height) { i => gen(Pos(i % width, i / width)) }
   def fillWithDistance[T](width: Int, height: Int)(gen: Double => T): Block[T] =
     fillWithPos(width, height)(p => gen(Math.sqrt((p.x + .5) * (p.x + .5) + (p.y + .5) * (p.y + .5))))
+  def withValues[T](width: Int, values: Seq[T]): Block[T] = new BlockImpl[T](width, values.size / width, values)
 
   implicit class BitBlockAdapter(block: Block[Boolean]) extends BitBlock(block)
 }
@@ -99,7 +97,7 @@ final class RegionImpl[T](block: Block[T], from: Pos[Int], width: Int, height: I
 
 class BitBlock(self: Block[Boolean]) {
   def mask[T](block: Block[T])(implicit zero: Zero[T]): Block[T] =
-    self.withValues(self.width.min(block.width), block.values.zip(self.values).map {
+    Block.withValues(self.width.min(block.width), block.values.zip(self.values).map {
       case (t, true) => t
       case (_, false) => zero()
     })

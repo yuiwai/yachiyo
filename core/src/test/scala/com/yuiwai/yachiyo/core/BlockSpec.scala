@@ -124,6 +124,7 @@ object BlockSpec extends TestSuite {
       m0.mask(b) ==> Block.fillZero[Int](3, 3)
     }
     "expansion" - {
+      Block.withValues(2, Seq(1, 2, 3, 4))
     }
     "shrink" - {
     }

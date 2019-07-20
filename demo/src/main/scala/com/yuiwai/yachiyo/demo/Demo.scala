@@ -16,6 +16,7 @@ object DemoApplication extends Application {
   val ParticleSceneKey = 3
   val NodeSceneKey = 4
   val WebGLSceneKey = 5
+  val DrawingSceneKey = 6
   override def initialSceneSuiteKey: Int = TopSceneKey
   override val sceneSuiteMap: Map[Int, SceneSuite] = Map(
     TopSceneKey -> SceneSuite(
@@ -42,6 +43,11 @@ object DemoApplication extends Application {
       () => WebGLDemoScene,
       () => new WebGLDemoPresenter,
       () => new WebGLDemoView
+    ),
+    DrawingSceneKey -> SceneSuite(
+      () => DrawingDemoScene,
+      () => DrawingDemoPresenter,
+      () => new DrawingDemoView
     )
   )
 }

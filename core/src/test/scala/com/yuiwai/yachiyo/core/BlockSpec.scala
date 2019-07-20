@@ -85,12 +85,18 @@ object BlockSpec extends TestSuite {
     }
     "concat" - {
       Block.fillSquare(2, 2).concatX(Block.fillSquare(3, 3)) ==> None
-      Block.fillSquare(2, 0).concatX(Block.fill(1, 2, 1)).get.values ==>
-        Seq(0, 0, 1, 0, 0, 1)
+      val b1 = Block.fillSquare(2, 0).concatX(Block.fill(1, 2, 1)).get
+      b1.width ==> 3
+      b1.values ==> Seq(0, 0, 1, 0, 0, 1)
+
+      Block.fillWithIndex(2, 2)(identity)
+        .concatX(Block.fillWithIndex(2, 2)(identity))
+        .get.values ==> Seq(0, 1, 0, 1, 2, 3, 2, 3)
 
       Block.fillSquare(2, 2).concatY(Block.fillSquare(3, 3)) ==> None
-      Block.fillSquare(2, 0).concatY(Block.fill(2, 1, 1)).get.values ==>
-        Seq(0, 0, 0, 0, 1, 1)
+      val b2 = Block.fillSquare(2, 0).concatY(Block.fill(2, 1, 1)).get
+      b2.height ==> 3
+      b2.values ==> Seq(0, 0, 0, 0, 1, 1)
     }
     "flip" - {
       Block.fillWithIndex(2, 2)(identity).flipX.values ==> Seq(1, 0, 3, 2)
@@ -111,7 +117,7 @@ object BlockSpec extends TestSuite {
         Some(Block.fill(2, 2, 3.0))
     }
     "bitBlock" - {
-      val b  = Block.fillWithIndex(3, 3)(identity)
+      val b = Block.fillWithIndex(3, 3)(identity)
       val m1 = BitBlock.fillOne(3, 3)
       val m0 = BitBlock.fillZero(3, 3)
       m1.mask(b) ==> b

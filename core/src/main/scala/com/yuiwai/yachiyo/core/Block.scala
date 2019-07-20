@@ -39,11 +39,14 @@ case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T
   override def concatX(that: Block[T]): Option[Block[T]] =
     if (height != that.height) None
     else Some {
-      copy(values = values.grouped(width).zip(that.values.sliding(that.width)).flatMap(xs => xs._1 ++ xs._2).toList)
+      copy(
+        width = width + that.width,
+        values = values.grouped(width).zip(that.values.grouped(that.width)).flatMap(xs => xs._1 ++ xs._2).toList
+      )
     }
   override def concatY(that: Block[T]): Option[Block[T]] =
     if (width != that.width) None
-    else Some(copy(values = values ++ that.values))
+    else Some(copy(height = height + that.height, values = values ++ that.values))
   override def flipX: Block[T] = copy(values = values.grouped(width).flatMap(_.reverse).toList)
   override def flipY: Block[T] = copy(values = values.grouped(width).toList.reverse.flatten)
   override def find(f: T => Boolean): Option[T] = values.find(f)
@@ -98,4 +101,10 @@ final class BitBlock(width: Int, height: Int, values: Seq[Boolean]) extends Bloc
 object BitBlock {
   def fillOne(width: Int, height: Int): BitBlock = new BitBlock(width, height, Seq.fill(width * height)(true))
   def fillZero(width: Int, height: Int): BitBlock = new BitBlock(width, height, Seq.fill(width * height)(false))
+  def fillWithIndex(width: Int, height: Int)(gen: Int => Boolean): BitBlock =
+    new BitBlock(width, height, Seq.tabulate(width * height)(gen))
+  def fillWithPos(width: Int, height: Int)(gen: Pos[Int] => Boolean): BitBlock =
+    fillWithIndex(width, height) { i => gen(Pos(i % width, i / width)) }
+  def fillWithDistance(width: Int, height: Int)(gen: Double => Boolean): BitBlock =
+    fillWithPos(width, height)(p => gen(Math.sqrt((p.x + .5) * (p.x + .5) + (p.y + .5) * (p.y + .5))))
 }

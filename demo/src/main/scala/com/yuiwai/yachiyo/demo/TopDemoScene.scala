@@ -1,9 +1,7 @@
 package com.yuiwai.yachiyo.demo
 
-import com.yuiwai.yachiyo.demo.TopDemoScene.{ToNodeDemo, ToParticleDemo, ToTransitionDemo, ToWebGLDemo}
+import com.yuiwai.yachiyo.demo.TopDemoScene.{ToNodeDemo, ToParticleDemo, ToTransitionDemo, ToWebGLDemo, ToDrawingDemo}
 import com.yuiwai.yachiyo.ui._
-
-import scala.None
 
 object TopDemoScene extends Scene {
   override type State = None.type
@@ -15,6 +13,7 @@ object TopDemoScene extends Scene {
   case object ToParticleDemo extends TopDemoCommand
   case object ToNodeDemo extends TopDemoCommand
   case object ToWebGLDemo extends TopDemoCommand
+  case object ToDrawingDemo extends TopDemoCommand
 
   override def initialState(): None.type = None
   override def execute(state: None.type, input: TopDemoCommand): (None.type, Event, SceneCallback) = input match {
@@ -22,6 +21,7 @@ object TopDemoScene extends Scene {
     case ToParticleDemo => (None, None, NextSceneCallback(DemoApplication.ParticleSceneKey))
     case ToNodeDemo => (None, None, NextSceneCallback(DemoApplication.NodeSceneKey))
     case ToWebGLDemo => (None, None, NextSceneCallback(DemoApplication.WebGLSceneKey))
+    case ToDrawingDemo => (None, None, NextSceneCallback(DemoApplication.DrawingSceneKey))
     case _ => (None, None, NoCallback)
   }
   override def cleanup(): Unit = {}
@@ -44,7 +44,8 @@ class TopView extends DomView {
       "Transition Demo" -> ToTransitionDemo,
       "Particle Demo" -> ToParticleDemo,
       "Node Demo" -> ToNodeDemo,
-      "WebGL Demo" -> ToWebGLDemo
+      "WebGL Demo" -> ToWebGLDemo,
+      "Drawing Demo" -> ToDrawingDemo
     ) foreach {
       case (label, command) =>
         val btn = button(label)

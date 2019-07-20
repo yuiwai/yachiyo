@@ -27,7 +27,7 @@ trait Block[T] {
   def rotateL: Block[T]
   def +(that: Block[T])(implicit add: Add[T]): Option[Block[T]]
 }
-final case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T] {
+case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T] {
   override def map[U](f: T => U): Block[U] = BlockImpl(width, height, values.map(f))
   override def row(index: Int): Option[Row[T]] =
     if (index < 0 || index >= height) None
@@ -65,6 +65,7 @@ class BlockIterator[T](block: Block[T], pos: Int) {
 object Block {
   def empty[T]: Block[T] = BlockImpl(0, 0, Seq.empty)
   def fill[T](width: Int, height: Int, value: => T): Block[T] = BlockImpl(width, height, Seq.fill(width * height)(value))
+  def fillZero[T](width: Int, height: Int)(implicit zero: Zero[T]): Block[T] = fill(width, height, zero())
   def fillSquare[T](width: Int, value: => T): Block[T] = fill(width, width, value)
   def fillWithIndex[T](width: Int, height: Int)(gen: Int => T): Block[T] =
     BlockImpl(width, height, Seq.tabulate(width * height)(gen))
@@ -72,7 +73,6 @@ object Block {
     fillWithIndex(width, height) { i => gen(Pos(i % width, i / width)) }
   def fillWithDistance[T](width: Int, height: Int)(gen: Double => T): Block[T] =
     fillWithPos(width, height)(p => gen(Math.sqrt((p.x + .5) * (p.x + .5) + (p.y + .5) * (p.y + .5))))
-  // def fillZero[T](width: Int, height: Int)(implicit z: Zero[T]): Block[T] =
 }
 
 trait Row[T]
@@ -87,4 +87,15 @@ trait Region[T] {
 }
 final class RegionImpl[T](block: Block[T], from: Pos[Int], width: Int, height: Int) extends Region[T] {
   override def size: Int = width.min(block.width - from.x + 1) * height.min(block.height - from.y + 1)
+}
+
+final class BitBlock(width: Int, height: Int, values: Seq[Boolean]) extends BlockImpl(width, height, values) {
+  def mask[T](block: Block[T])(implicit zero: Zero[T]): Block[T] = copy(values = block.values.zip(values).map {
+    case (t, true) => t
+    case (_, false) => zero()
+  })
+}
+object BitBlock {
+  def fillOne(width: Int, height: Int): BitBlock = new BitBlock(width, height, Seq.fill(width * height)(true))
+  def fillZero(width: Int, height: Int): BitBlock = new BitBlock(width, height, Seq.fill(width * height)(false))
 }

@@ -15,7 +15,9 @@ trait Plus[T] {
 }
 object Plus {
   implicit val intPlus: Plus[Int] = _ + _
+  implicit val floatPlus: Plus[Float] = _ + _
   implicit val doublePlus: Plus[Double] = _ + _
+  implicit def posPlus[T: Amount](implicit plus: Plus[T]): Plus[Pos[T]] = (a, b) => Pos(plus(a.x, b.x), plus(a.y, b.y))
 }
 trait Multiply[T, V] {
   def apply(t: T, v: V): T
@@ -30,7 +32,10 @@ trait Minus[T] {
 }
 object Minus {
   implicit val intMinus: Minus[Int] = _ - _
+  implicit val floatMinus: Minus[Float] = _ - _
   implicit val doubleMinus: Minus[Double] = _ - _
+  implicit def posMinus[T: Amount](implicit minus: Minus[T]): Minus[Pos[T]] =
+    (a, b) => Pos(minus(a.x, b.x), minus(a.y, b.y))
 }
 trait Amount[T] {
   def zero: T
@@ -48,6 +53,10 @@ object Amount {
   implicit val intAmount: Amount[Int] = new NumericAmount[Int] {
     def zero: Int = 0
     def toEachType(result: Double): Int = result.toInt
+  }
+  implicit val floatAmount: Amount[Float] = new NumericAmount[Float] {
+    override def zero: Float = 0f
+    override protected def toEachType(result: Double): Float = result.toFloat
   }
   implicit val doubleAmount: Amount[Double] = new NumericAmount[Double] {
     def zero: Double = 0.0

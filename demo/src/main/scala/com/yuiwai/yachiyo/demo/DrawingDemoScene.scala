@@ -1,5 +1,6 @@
 package com.yuiwai.yachiyo.demo
 
+import com.yuiwai.yachiyo.core.Drawing
 import com.yuiwai.yachiyo.ui._
 import org.scalajs.dom.raw.CanvasRenderingContext2D
 
@@ -37,13 +38,26 @@ final class DrawingDemoView extends CanvasView with CommonView {
   val canvasWidth = 300
   val canvasHeight = 300
   private var ctx2d: Option[CanvasRenderingContext2D] = None
+  private val circle = Drawing.circle(50)
   override def setup(viewModel: DrawingDemoViewModel, listener: Listener): Unit = {
     val canvas = createCanvas(canvasWidth, canvasHeight)
     ctx2d = Some(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
     container.appendChild(canvas)
   }
   override def update(viewModel: DrawingDemoViewModel): Unit = {
-
+    ctx2d.foreach { ctx =>
+      val imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight)
+      circle.valuesWithPos.foreach { case (p, b) =>
+        val i = (p.x + p.y * canvasWidth) * 4
+        if (b) {
+          imageData.data(i) = 0
+          imageData.data(i + 1) = 0
+          imageData.data(i + 2) = 0
+          imageData.data(i + 3) = 255
+        }
+      }
+      ctx.putImageData(imageData, 0, 0, 0, 0, canvasWidth, canvasHeight)
+    }
   }
   override def cleanup(): Unit = {
     super.cleanup()

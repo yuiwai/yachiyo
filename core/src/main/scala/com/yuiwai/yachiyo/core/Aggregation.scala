@@ -24,7 +24,11 @@ trait Divide[L, R] {
   def apply(l: L, r: R): L
 }
 object Divide {
+  type DivideByInt[T] = Divide[T, Int]
   implicit val intDivide: Divide[Int, Int] = _ / _
   implicit val doubleDivide: Divide[Double, Double] = _ / _
+  implicit val floatIntDivide: Divide[Float, Int] = _ / _
   implicit val doubleIntDivide: Divide[Double, Int] = _ / _
+  implicit def posIntDivide[T: Amount](implicit divide: DivideByInt[T]): Divide[Pos[T], Int] =
+    (a, b) => Pos(divide(a.x, b), divide(a.y, b))
 }

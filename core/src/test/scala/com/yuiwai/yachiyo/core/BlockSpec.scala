@@ -127,5 +127,7 @@ object BlockSpec extends TestSuite {
     }
     "shrink" - {
     }
+    "clipping" - {
+    }
   }
 }

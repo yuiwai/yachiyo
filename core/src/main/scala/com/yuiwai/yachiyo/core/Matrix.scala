@@ -68,6 +68,7 @@ trait Zero[T] {
   def apply(): T
 }
 object Zero {
+  implicit val booleanZero: Zero[Boolean] = () => false
   implicit val intZero: Zero[Int] = () => 0
   implicit val floatZero: Zero[Float] = () => 0f
   implicit val doubleZero: Zero[Double] = () => 0.0

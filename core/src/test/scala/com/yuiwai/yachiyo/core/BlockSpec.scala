@@ -118,8 +118,8 @@ object BlockSpec extends TestSuite {
     }
     "bitBlock" - {
       val b = Block.fillWithIndex(3, 3)(identity)
-      val m1 = BitBlock.fillOne(3, 3)
-      val m0 = BitBlock.fillZero(3, 3)
+      val m1 = Block.fill(3, 3, true)
+      val m0 = Block.fill(3, 3, false)
       m1.mask(b) ==> b
       m0.mask(b) ==> Block.fillZero[Int](3, 3)
     }

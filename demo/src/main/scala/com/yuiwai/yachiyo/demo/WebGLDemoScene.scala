@@ -6,6 +6,8 @@ import com.yuiwai.yachiyo.ui._
 import org.scalajs.dom
 import org.scalajs.dom.raw.{WebGLRenderingContext => GL}
 
+import scala.None
+
 object WebGLDemoScene extends Scene {
   override type State = None.type
   override type Command = WebGLDemoMsg
@@ -23,7 +25,7 @@ object WebGLDemoScene extends Scene {
 class WebGLDemoPresenter extends Presenter {
   override type S = WebGLDemoScene.type
   override type M = WebGLDemoViewModel
-  override def updated(state: None.type): WebGLDemoViewModel = WebGLDemoViewModel()
+  override def updated(state: None.type, prevModel: Prev): WebGLDemoViewModel = WebGLDemoViewModel()
 }
 
 final case class WebGLDemoViewModel() extends ViewModel

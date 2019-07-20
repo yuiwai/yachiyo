@@ -25,8 +25,7 @@ object BlockSpec extends TestSuite {
         Block.fillWithDistance(2, 2)(d => (d * 10).toInt).values ==> Seq(7, 15, 15, 21)
       }
       "fillZero" - {
-        // TODO webglがマージされたら対応
-        // Block.fillZero[Int](2, 2).values ==> Seq(0, 0, 0, 0)
+        Block.fillZero[Int](2, 2).values ==> Seq(0, 0, 0, 0)
       }
     }
     "values with pos" - {
@@ -110,6 +109,13 @@ object BlockSpec extends TestSuite {
         Some(Block.fill(2, 2, 3))
       Block.fill(2, 2, 1.0) + Block.fill(2, 2, 2.0) ==>
         Some(Block.fill(2, 2, 3.0))
+    }
+    "bitBlock" - {
+      val b  = Block.fillWithIndex(3, 3)(identity)
+      val m1 = BitBlock.fillOne(3, 3)
+      val m0 = BitBlock.fillZero(3, 3)
+      m1.mask(b) ==> b
+      m0.mask(b) ==> Block.fillZero[Int](3, 3)
     }
     "expansion" - {
     }

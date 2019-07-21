@@ -37,6 +37,16 @@ object BlockSpec extends TestSuite {
       Block.fill(2, 2, 'a').map(_ + "bcd").values ==> Seq("abcd", "abcd", "abcd", "abcd")
       Block.fillWithIndex(2, 2)(identity).map(_ * 2).values ==> Seq(0, 2, 4, 6)
     }
+    "mapRow" - {
+      val b = Block.fill(3, 3, 1).mapRow(2 +: _).get
+      b.size ==> 12
+      b.rows.forall(_ == Seq(2, 1, 1, 1)) ==> true
+    }
+    "mapCol" - {
+      val b = Block.fill(3, 3, 1).mapCol(2 +: _).get
+      b.size ==> 12
+      b.values ==> Seq(2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+    }
     "iterator" - {
       "empty" - {
         val itr = Block.empty.iterator
@@ -52,9 +62,9 @@ object BlockSpec extends TestSuite {
     "row" - {
       val b = Block.fillWithIndex(2, 3)(identity)
       b.row(-1) ==> None
-      b.row(0) ==> Some(Row(0, 1))
-      b.row(1) ==> Some(Row(2, 3))
-      b.row(2) ==> Some(Row(4, 5))
+      b.row(0) ==> Some(Seq(0, 1))
+      b.row(1) ==> Some(Seq(2, 3))
+      b.row(2) ==> Some(Seq(4, 5))
       b.row(3) ==> None
     }
     "region" - {
@@ -85,12 +95,18 @@ object BlockSpec extends TestSuite {
     }
     "concat" - {
       Block.fillSquare(2, 2).concatX(Block.fillSquare(3, 3)) ==> None
-      Block.fillSquare(2, 0).concatX(Block.fill(1, 2, 1)).get.values ==>
-        Seq(0, 0, 1, 0, 0, 1)
+      val b1 = Block.fillSquare(2, 0).concatX(Block.fill(1, 2, 1)).get
+      b1.width ==> 3
+      b1.values ==> Seq(0, 0, 1, 0, 0, 1)
+
+      Block.fillWithIndex(2, 2)(identity)
+        .concatX(Block.fillWithIndex(2, 2)(identity))
+        .get.values ==> Seq(0, 1, 0, 1, 2, 3, 2, 3)
 
       Block.fillSquare(2, 2).concatY(Block.fillSquare(3, 3)) ==> None
-      Block.fillSquare(2, 0).concatY(Block.fill(2, 1, 1)).get.values ==>
-        Seq(0, 0, 0, 0, 1, 1)
+      val b2 = Block.fillSquare(2, 0).concatY(Block.fill(2, 1, 1)).get
+      b2.height ==> 3
+      b2.values ==> Seq(0, 0, 0, 0, 1, 1)
     }
     "flip" - {
       Block.fillWithIndex(2, 2)(identity).flipX.values ==> Seq(1, 0, 3, 2)
@@ -111,15 +127,35 @@ object BlockSpec extends TestSuite {
         Some(Block.fill(2, 2, 3.0))
     }
     "bitBlock" - {
-      val b  = Block.fillWithIndex(3, 3)(identity)
-      val m1 = BitBlock.fillOne(3, 3)
-      val m0 = BitBlock.fillZero(3, 3)
+      val b = Block.fillWithIndex(3, 3)(identity)
+      val m1 = Block.fill(3, 3, true)
+      val m0 = Block.fill(3, 3, false)
       m1.mask(b) ==> b
       m0.mask(b) ==> Block.fillZero[Int](3, 3)
     }
-    "expansion" - {
+    "resizeX" - {
+      Block.resizeX(0, 0, Seq.empty[Int]) ==> Seq.empty
+      Block.resizeX(0, 0, Seq(1)) ==> Seq.empty
+      Block.resizeX(1, 0, Seq.empty[Int]) ==> Seq.empty
+      Block.resizeX(1, 0, Seq(1)) ==> Seq(1)
+      Block.resizeX(2, 0, Seq(1)) ==> Seq(1, 1)
+      Block.resizeX(2, 0, Seq(1, 2)) ==> Seq(1, 2)
+      Block.resizeX(2, 0, Seq(1, 2, 3)) ==> Seq(1, 3)
+      Block.resizeX(3, 0, Seq(1.0, 2.0)) ==> Seq(1.0, 1.5, 2.0)
+      Block.resizeX(3, 0, Seq(1.0, 2.0, 3.0, 4.0)) ==> Seq(1.0, 2.5, 4.0)
     }
-    "shrink" - {
+    "resizeTo" - {
+      val b1 = Block.withValues(2, Seq(1.0, 3.0, 5.0, 7.0))
+      val b2 = Block.withValues(3, Seq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0))
+      b1.resizeTo(2, 2).get ==> b1
+      b1.resizeTo(3, 2).get.values ==> Seq(1.0, 2.0, 3.0, 5.0, 6.0, 7.0)
+      b1.resizeTo(2, 3).get.values ==> Seq(1.0, 3.0, 3.0, 5.0, 5.0, 7.0)
+
+      b2.resizeTo(3, 3).get ==> b2
+      b2.resizeTo(2, 3).get.values ==> Seq(1.0, 3.0, 4.0, 6.0, 7.0, 9.0)
+      b2.resizeTo(3, 2).get.values ==> Seq(1.0, 2.0, 3.0, 7.0, 8.0, 9.0)
+    }
+    "clipping" - {
     }
   }
 }

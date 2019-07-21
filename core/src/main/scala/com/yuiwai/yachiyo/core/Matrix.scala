@@ -68,6 +68,7 @@ trait Zero[T] {
   def apply(): T
 }
 object Zero {
+  implicit val booleanZero: Zero[Boolean] = () => false
   implicit val intZero: Zero[Int] = () => 0
   implicit val floatZero: Zero[Float] = () => 0f
   implicit val doubleZero: Zero[Double] = () => 0.0
@@ -79,5 +80,17 @@ trait UNIT[T] {
 object UNIT {
   implicit val intUnit: UNIT[Int] = () => 1
   implicit val doubleUnit: UNIT[Double] = () => 1.0
+  implicit val boolUnit: UNIT[Boolean] = () => true
 }
 
+trait FromDouble[T] {
+  def apply(d: Double): T
+}
+object FromDouble {
+  implicit val toInt: FromDouble[Int] = _.toInt
+  implicit val toDouble: FromDouble[Double] = d => d
+  implicit val toBoolean: FromDouble[Boolean] = {
+    case 0.0 => false
+    case _ => true
+  }
+}

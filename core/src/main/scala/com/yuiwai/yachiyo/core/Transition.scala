@@ -24,19 +24,16 @@ object Amount {
     protected def toEachType(result: Double): T
   }
   implicit val intAmount: Amount[Int] = new NumericAmount[Int] {
-    def zero: Int = 0
     def toEachType(result: Double): Int = result.toInt
   }
   implicit val floatAmount: Amount[Float] = new NumericAmount[Float] {
     override protected def toEachType(result: Double): Float = result.toFloat
   }
   implicit val doubleAmount: Amount[Double] = new NumericAmount[Double] {
-    def zero: Double = 0.0
     protected def toEachType(result: Double): Double = result
   }
   abstract class DelegateAmount[A, B: Amount] extends Amount[A] {
     private val amount = implicitly[Amount[B]]
-    // def zero: A = reverse(amount.zero)
     def convert(v: A): B
     def reverse(v: B): A
     def value(initial: A, target: A, rate: Double): A =
@@ -46,11 +43,9 @@ object Amount {
     override def convert(v: Char): Int = v.toInt
     override def reverse(v: Int): Char = v.toChar
   }
-  implicit def listAmount[T](implicit amount: Amount[T]): Amount[List[T]] = new Amount[List[T]] {
-    def zero: List[T] = Nil
-    def value(initial: List[T], target: List[T], rate: Double): List[T] =
+  implicit def listAmount[T](implicit amount: Amount[T]): Amount[List[T]] =
+    (initial: List[T], target: List[T], rate: Double) =>
       initial.zip(target).map { case (i, t) => amount.value(i, t, rate) }
-  }
   implicit val stringAmount: Amount[String] = new DelegateAmount[String, List[Char]] {
     override def convert(v: String): List[Char] = v.toList
     override def reverse(v: List[Char]): String = v.mkString

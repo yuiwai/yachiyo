@@ -37,6 +37,11 @@ object BlockSpec extends TestSuite {
       Block.fill(2, 2, 'a').map(_ + "bcd").values ==> Seq("abcd", "abcd", "abcd", "abcd")
       Block.fillWithIndex(2, 2)(identity).map(_ * 2).values ==> Seq(0, 2, 4, 6)
     }
+    "mapRow" - {
+      val b = Block.fill(3, 3, 1).mapRow(2 +: _).get
+      b.size ==> 12
+      b.rows.forall(_ == Seq(2, 1, 1, 1)) ==> true
+    }
     "iterator" - {
       "empty" - {
         val itr = Block.empty.iterator
@@ -52,9 +57,9 @@ object BlockSpec extends TestSuite {
     "row" - {
       val b = Block.fillWithIndex(2, 3)(identity)
       b.row(-1) ==> None
-      b.row(0) ==> Some(Row(0, 1))
-      b.row(1) ==> Some(Row(2, 3))
-      b.row(2) ==> Some(Row(4, 5))
+      b.row(0) ==> Some(Seq(0, 1))
+      b.row(1) ==> Some(Seq(2, 3))
+      b.row(2) ==> Some(Seq(4, 5))
       b.row(3) ==> None
     }
     "region" - {
@@ -123,10 +128,25 @@ object BlockSpec extends TestSuite {
       m1.mask(b) ==> b
       m0.mask(b) ==> Block.fillZero[Int](3, 3)
     }
-    "expansion" - {
-      Block.withValues(2, Seq(1, 2, 3, 4))
+    "resizeX" - {
+      Block.resizeX(0, 0, Seq.empty) ==> Seq.empty
+      Block.resizeX(0, 0, Seq(1)) ==> Seq.empty
+      Block.resizeX(1, 0, Seq.empty) ==> Seq.empty
+      Block.resizeX(1, 0, Seq(1)) ==> Seq(1)
+      Block.resizeX(2, 0, Seq(1)) ==> Seq(1, 1)
+      Block.resizeX(2, 0, Seq(1, 2)) ==> Seq(1, 2)
+      Block.resizeX(2, 0, Seq(1, 2, 3)) ==> Seq(1, 3)
+      // Block.resizeX(3, 0, Seq(1.0, 2.0)) ==> Seq(1.0, 1.5, 2.0)
+      Block.resizeX(3, 0, Seq(1.0, 2.0, 3.0, 4.0)) ==> Seq(1.0, 2.5, 4.0)
     }
-    "shrink" - {
+    "resizeTo" - {
+      val b1 = Block.withValues(2, Seq(1, 3, 5, 7))
+      val b2 = Block.withValues(3, Seq(1, 2, 3, 4, 5, 6, 7, 8, 9))
+      b1.resizeTo(2, 2) ==> b1
+      // b1.resizeTo(3, 2).values ==> Seq(1, 2, 3, 5, 6, 7)
+
+      b2.resizeTo(3, 3) ==> b2
+      // b2.resizeTo(2, 3).values ==> Seq()
     }
     "clipping" - {
     }

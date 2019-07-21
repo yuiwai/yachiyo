@@ -82,3 +82,10 @@ object UNIT {
   implicit val doubleUnit: UNIT[Double] = () => 1.0
 }
 
+trait FromDouble[T] {
+  def apply(d: Double): T
+}
+object FromDouble {
+  implicit val toInt: FromDouble[Int] = _.toInt
+  implicit val toDouble: FromDouble[Double] = d => d
+}

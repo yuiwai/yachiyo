@@ -129,24 +129,24 @@ object BlockSpec extends TestSuite {
       m0.mask(b) ==> Block.fillZero[Int](3, 3)
     }
     "resizeX" - {
-      Block.resizeX(0, 0, Seq.empty) ==> Seq.empty
+      Block.resizeX(0, 0, Seq.empty[Int]) ==> Seq.empty
       Block.resizeX(0, 0, Seq(1)) ==> Seq.empty
-      Block.resizeX(1, 0, Seq.empty) ==> Seq.empty
+      Block.resizeX(1, 0, Seq.empty[Int]) ==> Seq.empty
       Block.resizeX(1, 0, Seq(1)) ==> Seq(1)
       Block.resizeX(2, 0, Seq(1)) ==> Seq(1, 1)
       Block.resizeX(2, 0, Seq(1, 2)) ==> Seq(1, 2)
       Block.resizeX(2, 0, Seq(1, 2, 3)) ==> Seq(1, 3)
-      // Block.resizeX(3, 0, Seq(1.0, 2.0)) ==> Seq(1.0, 1.5, 2.0)
+      Block.resizeX(3, 0, Seq(1.0, 2.0)) ==> Seq(1.0, 1.5, 2.0)
       Block.resizeX(3, 0, Seq(1.0, 2.0, 3.0, 4.0)) ==> Seq(1.0, 2.5, 4.0)
     }
     "resizeTo" - {
-      val b1 = Block.withValues(2, Seq(1, 3, 5, 7))
-      val b2 = Block.withValues(3, Seq(1, 2, 3, 4, 5, 6, 7, 8, 9))
-      b1.resizeTo(2, 2) ==> b1
-      // b1.resizeTo(3, 2).values ==> Seq(1, 2, 3, 5, 6, 7)
+      val b1 = Block.withValues(2, Seq(1.0, 3.0, 5.0, 7.0))
+      val b2 = Block.withValues(3, Seq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0))
+      b1.resizeTo(2, 2).get ==> b1
+      b1.resizeTo(3, 2).get.values ==> Seq(1.0, 2.0, 3.0, 5.0, 6.0, 7.0)
 
-      b2.resizeTo(3, 3) ==> b2
-      // b2.resizeTo(2, 3).values ==> Seq()
+      b2.resizeTo(3, 3).get ==> b2
+      b2.resizeTo(2, 3).get.values ==> Seq(1.0, 3.0, 4.0, 6.0, 7.0, 9.0)
     }
     "clipping" - {
     }

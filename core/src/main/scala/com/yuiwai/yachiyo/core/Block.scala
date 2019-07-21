@@ -27,7 +27,16 @@ trait Block[T] {
   def find(f: T => Boolean): Option[T]
   def rotateR: Block[T]
   def rotateL: Block[T]
-  def resizeTo(w: Int, h: Int): Block[T]
+  def resizeTo(w: Int, h: Int)
+    (implicit
+      plus: Plus[T],
+      minus: Minus[T],
+      multiply: Multiply[T, T],
+      divide: Divide[T, T],
+      zero: Zero[T],
+      unit: UNIT[T],
+      fromDouble: FromDouble[T]
+    ): Option[Block[T]]
   def +(that: Block[T])(implicit plus: Plus[T]): Option[Block[T]]
 }
 case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T] {
@@ -63,15 +72,22 @@ case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T
     copy(values = for {x <- 0 until width; y <- 1 to height} yield values(x + (height - y) * width))
   override def rotateL: Block[T] =
     copy(values = for {x <- 1 to width; y <- 0 until height} yield values(width - x + y * width))
-  override def resizeTo(w: Int, h: Int): Block[T] = this
-  /*
-    if (w == width && h == height) this
+  override def resizeTo(w: Int, h: Int)
+    (implicit
+      plus: Plus[T],
+      minus: Minus[T],
+      multiply: Multiply[T, T],
+      divide: Divide[T, T],
+      zero: Zero[T],
+      unit: UNIT[T],
+      fromDouble: FromDouble[T]
+    ): Option[Block[T]] =
+    if (w == width && h == height) Some(this)
     else {
       if (w != width) {
-        Block.resizeX(w, 0, Seq.empty)
-      } else this
+        mapRow[T](row => Block.resizeX(w, 0, row))
+      } else Some(this)
     }
-    */
   override def +(that: Block[T])(implicit plus: Plus[T]): Option[Block[T]] =
     if (width != that.width || height != that.height) None
     else Some(copy(values = values.zip(that.values).map(t => plus(t._1, t._2))))
@@ -96,7 +112,12 @@ object Block {
     fillWithPos(width, height)(p => gen(Math.sqrt((p.x + .5) * (p.x + .5) + (p.y + .5) * (p.y + .5))))
   def withValues[T](width: Int, values: Seq[T]): Block[T] = new BlockImpl[T](width, values.size / width, values)
   def resizeX[T: Plus : Minus](width: Int, current: Int, source: Seq[T], dest: Seq[T] = Seq.empty)
-    (implicit zero: Zero[T], unit: UNIT[T], divide: Divide[T, T], multiply: Multiply[T, T]): Seq[T] =
+    (implicit
+      zero: Zero[T],
+      unit: UNIT[T],
+      fromDouble: FromDouble[T],
+      divide: Divide[T, T],
+      multiply: Multiply[T, T]): Seq[T] =
     if (width <= 0 || source.isEmpty) Seq.empty
     else if (current < width) {
       if (source.size == 1) Seq.fill(width)(source.head)
@@ -105,7 +126,12 @@ object Block {
       else {
         val xd = current.toDouble * (source.size - 1) / (width - 1)
         val xi = xd.toInt
-        resizeX(width, current + 1, source, dest :+ Linear(zero(), source(xi), unit(), source(xi + 1)).apply(xd))
+        resizeX(
+          width,
+          current + 1,
+          source,
+          dest :+ Linear(zero(), source(xi), unit(), source(xi + 1))
+            .apply(fromDouble(xd - xi)))
       }
     }
     else dest

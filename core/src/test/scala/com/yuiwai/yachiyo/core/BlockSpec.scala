@@ -42,6 +42,11 @@ object BlockSpec extends TestSuite {
       b.size ==> 12
       b.rows.forall(_ == Seq(2, 1, 1, 1)) ==> true
     }
+    "mapCol" - {
+      val b = Block.fill(3, 3, 1).mapCol(2 +: _).get
+      b.size ==> 12
+      b.values ==> Seq(2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+    }
     "iterator" - {
       "empty" - {
         val itr = Block.empty.iterator
@@ -144,9 +149,11 @@ object BlockSpec extends TestSuite {
       val b2 = Block.withValues(3, Seq(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0))
       b1.resizeTo(2, 2).get ==> b1
       b1.resizeTo(3, 2).get.values ==> Seq(1.0, 2.0, 3.0, 5.0, 6.0, 7.0)
+      b1.resizeTo(2, 3).get.values ==> Seq(1.0, 3.0, 3.0, 5.0, 5.0, 7.0)
 
       b2.resizeTo(3, 3).get ==> b2
       b2.resizeTo(2, 3).get.values ==> Seq(1.0, 3.0, 4.0, 6.0, 7.0, 9.0)
+      b2.resizeTo(3, 2).get.values ==> Seq(1.0, 2.0, 3.0, 7.0, 8.0, 9.0)
     }
     "clipping" - {
     }

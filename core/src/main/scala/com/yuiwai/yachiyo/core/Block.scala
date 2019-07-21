@@ -12,6 +12,7 @@ trait Block[T] {
   def rows: Seq[Seq[T]] = values.grouped(width).toSeq
   def map[U](f: T => U): Block[U]
   def mapRow[U](f: Seq[T] => Seq[U]): Option[Block[U]]
+  def mapCol[U](f: Seq[T] => Seq[U]): Option[Block[U]]
   def iterator: BlockIterator[T] = new BlockIterator[T](this, 0)
   def foreach(f: T => Unit): Unit = values.foreach(f)
   def row(index: Int): Option[Seq[T]]
@@ -47,6 +48,7 @@ case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T
     if (!rows.forall(_.length == w)) None
     else Some(Block.withValues(w, rows.flatten))
   }
+  override def mapCol[U](f: Seq[T] => Seq[U]): Option[Block[U]] = rotateL.flipY.mapRow(f).map(_.flipY.rotateR)
   override def row(index: Int): Option[Seq[T]] =
     if (index < 0 || index >= height) None
     else Some(values.slice(index * width, (index + 1) * width))
@@ -69,9 +71,15 @@ case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T
   override def flipY: Block[T] = copy(values = values.grouped(width).toList.reverse.flatten)
   override def find(f: T => Boolean): Option[T] = values.find(f)
   override def rotateR: Block[T] =
-    copy(values = for {x <- 0 until width; y <- 1 to height} yield values(x + (height - y) * width))
+    copy(
+      width = height,
+      height = width,
+      values = for {x <- 0 until width; y <- 1 to height} yield values(x + (height - y) * width))
   override def rotateL: Block[T] =
-    copy(values = for {x <- 1 to width; y <- 0 until height} yield values(width - x + y * width))
+    copy(
+      width = height,
+      height = width,
+      values = for {x <- 1 to width; y <- 0 until height} yield values(width - x + y * width))
   override def resizeTo(w: Int, h: Int)
     (implicit
       plus: Plus[T],
@@ -84,9 +92,12 @@ case class BlockImpl[T](width: Int, height: Int, values: Seq[T]) extends Block[T
     ): Option[Block[T]] =
     if (w == width && h == height) Some(this)
     else {
-      if (w != width) {
+      val x = if (w != width) {
         mapRow[T](row => Block.resizeX(w, 0, row))
       } else Some(this)
+      if (h != height) {
+        x.flatMap(_.mapCol[T](col => Block.resizeX(h, 0, col)))
+      } else x
     }
   override def +(that: Block[T])(implicit plus: Plus[T]): Option[Block[T]] =
     if (width != that.width || height != that.height) None

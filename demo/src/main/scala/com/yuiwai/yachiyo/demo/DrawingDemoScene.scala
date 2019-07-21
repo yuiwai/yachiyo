@@ -37,8 +37,11 @@ final class DrawingDemoView extends CanvasView with CommonView {
   override type S = DrawingDemoScene.type
   val canvasWidth = 300
   val canvasHeight = 300
+  val originRadius = 10
+  val resizedWidth = 50
+  val margin = 10
   private var ctx2d: Option[CanvasRenderingContext2D] = None
-  private val circle = Drawing.circle(10).resizeTo(50, 10).get
+  private val circle = Drawing.circle(originRadius).resizeTo(resizedWidth, originRadius * 2).get
   override def setup(viewModel: DrawingDemoViewModel, listener: Listener): Unit = {
     val canvas = createCanvas(canvasWidth, canvasHeight)
     ctx2d = Some(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
@@ -48,8 +51,8 @@ final class DrawingDemoView extends CanvasView with CommonView {
     ctx2d.foreach { ctx =>
       val imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight)
       for {
-        x <- 0.to(300, 60)
-        y <- 0.to(300, 30)
+        x <- 0.to(canvasWidth, resizedWidth + margin)
+        y <- 0.to(canvasHeight, originRadius * 2 + margin)
       } {
         circle.valuesWithPos.foreach { case (p, b) =>
           val i = (p.x + x + (p.y + y) * canvasWidth) * 4

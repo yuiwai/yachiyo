@@ -80,6 +80,7 @@ trait UNIT[T] {
 object UNIT {
   implicit val intUnit: UNIT[Int] = () => 1
   implicit val doubleUnit: UNIT[Double] = () => 1.0
+  implicit val boolUnit: UNIT[Boolean] = () => true
 }
 
 trait FromDouble[T] {
@@ -88,4 +89,8 @@ trait FromDouble[T] {
 object FromDouble {
   implicit val toInt: FromDouble[Int] = _.toInt
   implicit val toDouble: FromDouble[Double] = d => d
+  implicit val toBoolean: FromDouble[Boolean] = {
+    case 0.0 => false
+    case _ => true
+  }
 }

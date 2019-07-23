@@ -14,6 +14,10 @@ object BlockSpec extends TestSuite {
         b.size ==> 9
         b.foreach(_ ==> false)
       }
+      "fillTile" - {
+        val b = Block.fillTile(4, 4, Block.fillWithIndex(2, 2)(identity))
+        b.values ==> Seq(0, 1, 0, 1, 2, 3, 2, 3, 0, 1, 0, 1, 2, 3, 2, 3)
+      }
       "fillWithIndex" - {
         Block.fillWithIndex(2, 2)(identity).values ==> Seq(0, 1, 2, 3)
         Block.fillWithIndex(2, 3)(identity).values ==> Seq(0, 1, 2, 3, 4, 5)
@@ -22,7 +26,7 @@ object BlockSpec extends TestSuite {
         Block.fillWithPos(2, 2)(identity).values ==> Seq(Pos(0, 0), Pos(1, 0), Pos(0, 1), Pos(1, 1))
       }
       "fillWithDistance" - {
-        Block.fillWithDistance(2, 2)(d => (d * 10).toInt).values ==> Seq(7, 15, 15, 21)
+        Block.fillWithDistance(2, 2)(d => (d * 10).toInt).values ==> Seq(14, 22, 22, 28)
       }
       "fillZero" - {
         Block.fillZero[Int](2, 2).values ==> Seq(0, 0, 0, 0)
@@ -33,7 +37,7 @@ object BlockSpec extends TestSuite {
         Seq(Pos(0, 0) -> 0, Pos(1, 0) -> 1, Pos(0, 1) -> 2, Pos(1, 1) -> 3)
     }
     "map" - {
-      Block.fill(3, 3, 1).map(_ + 1) ==> BlockImpl(3, 3, Seq(2, 2, 2, 2, 2, 2, 2, 2, 2))
+      Block.fill(3, 3, 1).map(_ + 1) ==> BlockImpl(3, 3, Vector(2, 2, 2, 2, 2, 2, 2, 2, 2))
       Block.fill(2, 2, 'a').map(_ + "bcd").values ==> Seq("abcd", "abcd", "abcd", "abcd")
       Block.fillWithIndex(2, 2)(identity).map(_ * 2).values ==> Seq(0, 2, 4, 6)
     }

@@ -1,8 +1,8 @@
 package com.yuiwai.yachiyo.core
 
-object Color
+trait Color extends Any
 
-final case class RGB(value: Int) extends AnyVal {
+final case class RGB(value: Int) extends AnyVal with Color {
   def r: Int = value >> 16 & 0xff
   def g: Int = value >> 8 & 0xff
   def b: Int = value & 0xff
@@ -31,5 +31,7 @@ object RGB {
   val Green = apply(0, 255, 0)
   val Blue = apply(0, 0, 255)
 }
+
+// TODO RGBA
 
 // final case class HLS(h: Int, l: Int, s: Int) extends Color

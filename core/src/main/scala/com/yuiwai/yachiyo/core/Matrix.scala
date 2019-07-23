@@ -94,3 +94,15 @@ object FromDouble {
     case _ => true
   }
 }
+
+trait ToDouble[T] {
+  def apply(v: T): Double
+}
+object ToDouble {
+  implicit val fromInt: ToDouble[Int] = _.toDouble
+  implicit val fromDouble: ToDouble[Double] = d => d
+  implicit val fromBoolean: ToDouble[Boolean] = {
+    case true => 1.0
+    case _ => 0.0
+  }
+}

@@ -48,14 +48,14 @@ class ParticleDemoPresenter extends Presenter {
 }
 
 final case class ParticleDemoViewModel(
-  block: Block[Boolean],
+  block: Block[Double],
   particleCount: Int
 ) extends ViewModel
 object ParticleDemoViewModel {
   val canvasWidth = 300
   val canvasHeight = 300
-  val circle: Block[Boolean] = Drawing.circle(2)
-  val field: Block[Boolean] = Block.fillZero[Boolean](canvasWidth, canvasHeight)
+  val circle: Block[Double] = Drawing.circle(2)
+  val field: Block[Double] = Block.fillZero[Double](canvasWidth, canvasHeight)
 }
 
 class ParticleDemoView extends CanvasView with CommonView {
@@ -86,16 +86,16 @@ class ParticleDemoView extends CanvasView with CommonView {
     super.cleanup()
     playing = false
   }
-  private def draw(block: Block[Boolean]): Unit = {
+  private def draw(block: Block[Double]): Unit = {
     ctx2d.foreach { ctx =>
       ctx.beginPath()
-      ctx.fillStyle = "rgba(0, 0, 0, .05)"
+      ctx.fillStyle = "rgba(0, 0, 0, .1)"
       ctx.fillRect(0, 0, canvasWidth, canvasHeight)
       val imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight)
       var i = 0
       block.values.foreach { v =>
-        if (v) {
-          imageData.data(i) = 255
+        if (v > 0) {
+          imageData.data(i) = (255 * v).toInt
           imageData.data(i + 1) = 255
           imageData.data(i + 2) = 0
           imageData.data(i + 3) = 255

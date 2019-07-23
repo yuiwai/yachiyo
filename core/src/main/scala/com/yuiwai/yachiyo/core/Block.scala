@@ -17,6 +17,20 @@ trait Block[T] {
       indexToPos(i) -> v
     }
   }
+  def mapValuesWithPos[U](f: ((P, T)) => U): Seq[U] = {
+    var i = -1
+    values.map { v =>
+      i = i + 1
+      f(indexToPos(i) -> v)
+    }
+  }
+  def foldValuesWithPos[U](z: U)(f: ((U, (P, T))) => U): U = {
+    var i = -1
+    values.foldLeft(z) { (acc, v) =>
+      i = i + 1
+      f((acc, indexToPos(i) -> v))
+    }
+  }
   def rows: Seq[Seq[T]] = values.grouped(width).toSeq
   def map[U](f: T => U): Block[U]
   def mapRow[U](f: Seq[T] => Seq[U]): Option[Block[U]]
@@ -26,8 +40,11 @@ trait Block[T] {
   def row(index: Int): Option[Seq[T]]
   def region(from: P, width: Int, height: Int): Region[T]
   def updated(pos: P, value: T): Block[T]
-  def patch(dest: P, block: Block[T]): Block[T] = Block.withValues(width, block.valuesWithPos.foldLeft(values) {
+  def patch(dest: P, block: Block[T]): Block[T] = Block.withValues(width, block.foldValuesWithPos(values) {
     case (acc, (p, v)) => posToIndex(dest + p).map(i => acc.updated(i, v)).getOrElse(acc)
+  })
+  def mix(dest: P, block: Block[T], mixer: (T, T) => T): Block[T] = Block.withValues(width, block.foldValuesWithPos(values) {
+    case (acc, (p, v)) => posToIndex(dest + p).map(i => acc.updated(i, mixer(acc(i), v))).getOrElse(acc)
   })
   def concatX(that: Block[T]): Option[Block[T]]
   def concatY(that: Block[T]): Option[Block[T]]
@@ -122,6 +139,17 @@ class BlockIterator[T](block: Block[T], pos: Int) {
 object Block {
   def empty[T]: Block[T] = BlockImpl(0, 0, Vector.empty)
   def fill[T](width: Int, height: Int, value: => T): Block[T] = BlockImpl(width, height, Vector.fill(width * height)(value))
+  def fillTile[T](width: Int, height: Int, tile: Block[T]): Block[T] = {
+    // FIXME 暫定実装
+    def impl(x: Int, y: Int, current: Block[T]): Block[T] = {
+      (x, y) match {
+        case (0, 0) => current
+        case (0, _) => (0 until y).foldLeft(current)((acc, _) => acc.concatY(current).getOrElse(current))
+        case (_, _) => impl(x - 1, y, current.concatX(tile).getOrElse(current))
+      }
+    }
+    impl(width / tile.width - 1, height / tile.height - 1, tile)
+  }
   def fillZero[T](width: Int, height: Int)(implicit zero: Zero[T]): Block[T] = fill(width, height, zero())
   def fillSquare[T](width: Int, value: => T): Block[T] = fill(width, width, value)
   def fillWithIndex[T](width: Int, height: Int)(gen: Int => T): Block[T] =
@@ -129,7 +157,7 @@ object Block {
   def fillWithPos[T](width: Int, height: Int)(gen: Pos[Int] => T): Block[T] =
     fillWithIndex(width, height) { i => gen(Pos(i % width, i / width)) }
   def fillWithDistance[T](width: Int, height: Int)(gen: Double => T): Block[T] =
-    fillWithPos(width, height)(p => gen(Math.sqrt((p.x + .5) * (p.x + .5) + (p.y + .5) * (p.y + .5))))
+    fillWithPos(width, height)(p => gen(Math.sqrt((p.x + 1) * (p.x + 1) + (p.y + 1) * (p.y + 1))))
   def withValues[T](width: Int, values: Seq[T]): Block[T] = new BlockImpl[T](width, values.size / width, values.toVector)
   def resizeX[T: Plus : Minus](width: Int, current: Int, source: Seq[T], dest: Seq[T] = Seq.empty)
     (implicit

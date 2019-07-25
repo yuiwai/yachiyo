@@ -78,6 +78,29 @@ lazy val akka = crossProject(JSPlatform, JVMPlatform)
 lazy val akkaJVM = akka.jvm
 lazy val akkaJS = akka.js
 
+
+lazy val zio = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "yachiyo-zio"
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "dev.zio" %% "zio" % "1.0.0-RC10-1",
+      "dev.zio" %% "zio-streams" % "1.0.0-RC10-1"
+    )
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "dev.zio" %%% "zio" % "1.0.0-RC10-1",
+      "dev.zio" %%% "zio-streams" % "1.0.0-RC10-1"
+    )
+  )
+  .dependsOn(ui)
+
+lazy val zioJVM = zio.jvm
+lazy val zioJS = zio.js
+
 lazy val demo = project
   .in(file("demo"))
   .dependsOn(akkaJS)

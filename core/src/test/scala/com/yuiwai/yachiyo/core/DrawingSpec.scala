@@ -9,8 +9,9 @@ object DrawingSpec extends TestSuite {
       Drawing.circle(2.5).size ==> 16
     }
     "line" - {
-      val l = Drawing.line(Pos(0, 0), Pos(2, 2), 1)
-      l.size ==> 4
+      Drawing.line(Pos(0, 0), Pos(2, 2), 1).size ==> 9
+      Drawing.line(Pos(0, 0), Pos(0, 5), 1).values ==> Seq(1, 1, 1, 1, 1)
+      Drawing.line(Pos(0, 0), Pos(5, 0), 1).values ==> Seq(1, 1, 1, 1, 1)
     }
   }
 }

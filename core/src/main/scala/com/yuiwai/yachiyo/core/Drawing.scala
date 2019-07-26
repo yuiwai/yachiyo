@@ -14,11 +14,17 @@ object Drawing {
     (implicit toDouble: ToDouble[T]): Block[Double] = {
     (from.map(toDouble(_)), to.map(toDouble(_))) match {
       case (fp, tp) =>
-        val e = Linear(fp.x, fp.y, tp.x, tp.y)
-        Block.fillWithPos(
-          (fp.x.max(tp.x) - fp.x.min(tp.x)).toInt,
-          (fp.y.max(tp.y) - fp.y.min(tp.y)).toInt
-        )(p => (toDouble(weight) - Math.abs(e(p.x + .5) - p.y)).max(0) / toDouble(weight))
+        if (fp.x == tp.x) {
+          Block.fillWithPos(toDouble(weight).toInt, Math.abs(tp.y - fp.y).toInt)(_ => 1)
+        } else if (fp.y == tp.y) {
+          Block.fillWithPos(Math.abs(tp.x - fp.x).toInt, toDouble(weight).toInt)(_ => 1)
+        } else {
+          val e = Linear(fp.x, fp.y, tp.x, tp.y)
+          Block.fillWithPos(
+            (Math.abs(fp.x - tp.x) + toDouble(weight)).toInt,
+            (Math.abs(fp.y - tp.y) + toDouble(weight)).toInt
+          )(p => (toDouble(weight) - Math.abs(e(p.x) - p.y)).max(0) * toDouble(weight))
+        }
     }
   }
 }

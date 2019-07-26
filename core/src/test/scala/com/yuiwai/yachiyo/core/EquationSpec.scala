@@ -17,9 +17,16 @@ object EquationSpec extends TestSuite {
       l3(1) ==> 8
       l3(2) ==> 6
 
+      val l4 = Linear(0, 10)
+      l4(1) ==> 10
+      l4(2) ==> 10
+
+      val l5 = Linear(10.0, 10.0, 10.0, 20.0)
+
       Linear(1.0, 1.0, 2.0, 2.0) ==> l1
       Linear(1.0, 2.0, 2.0, 4.0) ==> l2
       Linear(1, 8, 2, 6) ==> l3
+      Linear(10, 10, 20, 10) ==> l4
     }
   }
 }

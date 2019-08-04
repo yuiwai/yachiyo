@@ -82,16 +82,19 @@ lazy val akkaJS = akka.js
 lazy val zio = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
-    name := "yachiyo-zio"
+    name := "yachiyo-zio",
+    testFrameworks += new TestFramework("utest.runner.Framework")
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "utest" % "0.6.7" % "test",
       "dev.zio" %% "zio" % "1.0.0-RC10-1",
       "dev.zio" %% "zio-streams" % "1.0.0-RC10-1"
     )
   )
   .jsSettings(
     libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "utest" % "0.6.7" % "test",
       "dev.zio" %%% "zio" % "1.0.0-RC10-1",
       "dev.zio" %%% "zio-streams" % "1.0.0-RC10-1"
     )
@@ -112,6 +115,15 @@ lazy val demo = project
       "org.scala-js" %%% "scalajs-dom" % "0.9.7",
       "com.yuiwai" %%% "kasumi-core" % "0.2.0-SNAPSHOT"
     ),
+    scalaJSUseMainModuleInitializer := true
+  )
+
+lazy val demoZio = project
+  .in(file("demo-zio"))
+  .dependsOn(zioJS)
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    name := "yachiyo-demo-zio",
     scalaJSUseMainModuleInitializer := true
   )
 

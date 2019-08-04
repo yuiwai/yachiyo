@@ -5,10 +5,11 @@ import com.yuiwai.yachiyo.ui.{NoCallback, SceneCallback, SceneSuite, StateChange
 import com.yuiwai.yachiyo.zio.ApplicationHandler._
 import com.yuiwai.yachiyo.zio.PresenterHandler.{PresenterCallback, PresenterCommand, PresenterEnv}
 import com.yuiwai.yachiyo.zio.SceneHandler.{SceneCommand, SceneEnv}
+import com.yuiwai.yachiyo.zio.ViewHandler.{ViewCommand, ViewEnv}
 import com.yuiwai.yachiyo.zio.{ApplicationHandler, PresenterHandler, SceneHandler, ViewHandler}
 import com.yuiwia.yachiyo.zio.TestScene.AddOne
 import utest._
-import zio.{DefaultRuntime, Queue, ZIO}
+import zio.{DefaultRuntime, Queue, Ref, ZIO}
 
 object ApplicationHandlerSpec extends TestSuite with DefaultRuntime {
   val tests = Tests {
@@ -80,7 +81,6 @@ object ApplicationHandlerSpec extends TestSuite with DefaultRuntime {
         headOfSceneQueue() ==> SceneHandler.Execution(AddOne: TestScene.Command)
 
         doCommand(ViewCallbackWrap(ViewHandler.CleanedUp))()
-        headOfSceneQueue().asInstanceOf[SceneHandler.Initialize].genScene() ==> TestScene
       }
       "terminate" - {
         doCommand(ApplicationHandler.Terminate)()
@@ -96,16 +96,18 @@ object SceneHandlerSpec extends TestSuite with DefaultRuntime {
     unsafeRun {
       for {
         queue <- Queue.unbounded[SceneCommand[_]]
+        ref <- Ref.make(TestScene)
         _ <- queue.offer(command)
-        _ <- SceneHandler.program(TestScene, queue).provide(env)
+        _ <- SceneHandler.program(ref, queue).provide(env)
       } yield ()
     }
   def execute(command: TestScene.Command)(env: SceneEnv = defaultEnv): Unit =
     unsafeRun {
       for {
         queue <- Queue.unbounded[SceneCommand[_]]
+        ref <- Ref.make(TestScene)
         _ <- queue.offer(SceneHandler.Execution(command))
-        _ <- SceneHandler.program(TestScene, queue).provide(env)
+        _ <- SceneHandler.program(ref, queue).provide(env)
       } yield ()
     }
   val tests = Tests {
@@ -153,6 +155,29 @@ object PresenterHandlerSpec extends TestSuite with DefaultRuntime {
       doCommand(PresenterHandler.Cleanup)()
       Thread.sleep(10)
       callbacks.head ==> PresenterHandler.CleanedUp
+    }
+  }
+}
+
+object ViewHandlerSpec extends TestSuite with DefaultRuntime {
+  private var callbacks = List.empty[ViewHandler.ViewCallback]
+  private val defaultEnv = ViewEnv(cb => callbacks = cb :: callbacks)
+  def doCommand(command: ViewCommand)(env: ViewEnv = defaultEnv) = unsafeRun(for {
+    queue <- Queue.unbounded[ViewCommand]
+    _ <- queue.offer(command)
+    _ <- ViewHandler.program(TestView, queue).provide(env)
+  } yield ())
+  val tests = Tests {
+    "initialize" - {
+      doCommand(ViewHandler.Initialize(() => TestView, TestViewModel(1)))()
+      callbacks.head ==> ViewHandler.Initialized
+    }
+    "update" - {
+      doCommand(ViewHandler.Update(TestViewModel(5)))()
+    }
+    "cleanup" - {
+      doCommand(ViewHandler.Cleanup)()
+      callbacks.head ==> ViewHandler.CleanedUp
     }
   }
 }

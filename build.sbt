@@ -120,11 +120,9 @@ lazy val demo = project
 
 lazy val demoZio = project
   .in(file("demo-zio"))
-  .dependsOn(zioJS)
-  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(zioJVM)
   .settings(
-    name := "yachiyo-demo-zio",
-    scalaJSUseMainModuleInitializer := true
+    name := "yachiyo-demo-zio"
   )
 
 lazy val fx = project

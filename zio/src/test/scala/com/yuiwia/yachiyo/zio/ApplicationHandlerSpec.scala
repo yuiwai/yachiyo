@@ -3,7 +3,7 @@ package com.yuiwia.yachiyo.zio
 import com.yuiwai.yachiyo.ui
 import com.yuiwai.yachiyo.ui.{NoCallback, SceneCallback, SceneSuite, StateChangedCallback}
 import com.yuiwai.yachiyo.zio.ApplicationHandler._
-import com.yuiwai.yachiyo.zio.PresenterHandler.{PresenterCallback, PresenterCommand, PresenterEnv}
+import com.yuiwai.yachiyo.zio.PresenterHandler.{PresenterCommand, PresenterEnv}
 import com.yuiwai.yachiyo.zio.SceneHandler.{SceneCommand, SceneEnv}
 import com.yuiwai.yachiyo.zio.ViewHandler.{ViewCommand, ViewEnv}
 import com.yuiwai.yachiyo.zio.{ApplicationHandler, PresenterHandler, SceneHandler, ViewHandler}
@@ -35,6 +35,7 @@ object ApplicationHandlerSpec extends TestSuite with DefaultRuntime {
         r <- ZIO.accessM[AppEnv](_.appState.viewQueue.take)
       } yield r).provide(env))
 
+      /*
       def currentScene(env: AppEnv = defaultEnv) = unsafeRun((for {
         r <- ZIO.accessM[AppEnv](_.appState.currentScene.get)
       } yield r).provide(env))
@@ -46,6 +47,7 @@ object ApplicationHandlerSpec extends TestSuite with DefaultRuntime {
       def currentView(env: AppEnv = defaultEnv) = unsafeRun((for {
         r <- ZIO.accessM[AppEnv](_.appState.currentView.get)
       } yield r).provide(env))
+      */
 
       "sceneCallback" - {
         doCommand(SceneCallbackWrap(ui.Initialized(10: TestScene.State)))()
@@ -58,10 +60,6 @@ object ApplicationHandlerSpec extends TestSuite with DefaultRuntime {
         headOfPresenterQueue() ==> PresenterHandler.Cleanup
 
         doCommand(SceneCallbackWrap(ui.NextSceneCallback(2)))()
-        headOfSceneQueue().asInstanceOf[SceneHandler.Initialize].genScene() ==> TestScene2
-        currentScene() ==> TestScene2
-        currentPresenter() ==> TestPresenter2
-        currentView() ==> TestView2
       }
       "presenterCallback" - {
         doCommand(PresenterCallbackWrap(PresenterHandler.Initialized(TestViewModel(5))))()
@@ -90,8 +88,7 @@ object ApplicationHandlerSpec extends TestSuite with DefaultRuntime {
 }
 
 object SceneHandlerSpec extends TestSuite with DefaultRuntime {
-  private var callbacks = List.empty[SceneCallback]
-  val defaultEnv = SceneEnv(cb => callbacks = cb :: callbacks)
+  val defaultEnv = unsafeRun(Queue.unbounded[ApplicationCommand].map(q => SceneEnv(q)))
   def doCommand(command: SceneCommand[_])(env: SceneEnv = defaultEnv): Unit =
     unsafeRun {
       for {
@@ -110,74 +107,93 @@ object SceneHandlerSpec extends TestSuite with DefaultRuntime {
         _ <- SceneHandler.program(ref, queue).provide(env)
       } yield ()
     }
+  def headOfQueue(env: SceneEnv = defaultEnv) =
+    unsafeRun(
+      (for {
+        queue <- ZIO.access[SceneEnv](_.appQueue)
+        msg <- queue.take
+      } yield msg).provide(env)
+    )
   val tests = Tests {
     "initialize" - {
-      doCommand(SceneHandler.Initialize(() => TestScene))()
+      doCommand(SceneHandler.Initialize)()
       Thread.sleep(10)
-      callbacks.head ==> ui.Initialized(1: TestScene.State)
+      headOfQueue() ==> SceneCallbackWrap(ui.Initialized(1: TestScene.State))
     }
     "execute command" - {
       execute(AddOne)()
       Thread.sleep(10)
-      callbacks.head ==> StateChangedCallback(2: TestScene.State)
+      headOfQueue() ==> SceneCallbackWrap(StateChangedCallback(2: TestScene.State))
     }
     "cleanup" - {
       doCommand(SceneHandler.Cleanup)()
       Thread.sleep(10)
-      callbacks.head ==> ui.CleanedUp
+      headOfQueue() ==> SceneCallbackWrap(ui.CleanedUp)
     }
   }
 }
 
 object PresenterHandlerSpec extends TestSuite with DefaultRuntime {
-  private var callbacks = List.empty[PresenterCallback]
-  private val defaultEnv = PresenterEnv(cb => callbacks = cb :: callbacks)
+  private val defaultEnv = unsafeRun(Queue.unbounded[ApplicationCommand].map(q => PresenterEnv(q)))
   def doCommand(command: PresenterCommand)(env: PresenterEnv = defaultEnv): Unit =
     unsafeRun {
       for {
         queue <- Queue.unbounded[PresenterCommand]
+        ref <- Ref.make[ui.Presenter](TestPresenter)
         _ <- queue.offer(command)
-        _ <- PresenterHandler.program(TestPresenter, queue).provide(env)
+        _ <- PresenterHandler.program(ref, queue).provide(env)
       } yield ()
     }
+  def headOfQueue(env: PresenterEnv = defaultEnv) =
+    unsafeRun(
+      (for {
+        queue <- ZIO.access[PresenterEnv](_.appQueue)
+        msg <- queue.take
+      } yield msg).provide(env)
+    )
   val tests = Tests {
     "initialize" - {
       doCommand(PresenterHandler.Initialize[TestScene.type, TestViewModel](1, () => TestPresenter))()
       Thread.sleep(10)
-      callbacks.head ==> PresenterHandler.Initialized(TestViewModel(1))
+      headOfQueue() ==> PresenterCallbackWrap(PresenterHandler.Initialized(TestViewModel(1)))
     }
     "update" - {
       doCommand(PresenterHandler.Update(2: TestScene.State))()
       Thread.sleep(10)
-      callbacks.head ==> PresenterHandler.Updated(TestViewModel(2))
+      headOfQueue() ==> PresenterCallbackWrap(PresenterHandler.Updated(TestViewModel(2)))
     }
     "cleanup" - {
       doCommand(PresenterHandler.Cleanup)()
       Thread.sleep(10)
-      callbacks.head ==> PresenterHandler.CleanedUp
+      headOfQueue() ==> PresenterCallbackWrap(PresenterHandler.CleanedUp)
     }
   }
 }
 
 object ViewHandlerSpec extends TestSuite with DefaultRuntime {
-  private var callbacks = List.empty[ViewHandler.ViewCallback]
-  private val defaultEnv = ViewEnv(cb => callbacks = cb :: callbacks)
+  private val defaultEnv = unsafeRun(Queue.unbounded[ApplicationCommand].map(q => ViewEnv(q)))
   def doCommand(command: ViewCommand)(env: ViewEnv = defaultEnv) = unsafeRun(for {
     queue <- Queue.unbounded[ViewCommand]
+    ref <- Ref.make[ui.View](TestView)
     _ <- queue.offer(command)
-    _ <- ViewHandler.program(TestView, queue).provide(env)
+    _ <- ViewHandler.program(ref, queue).provide(env)
   } yield ())
+  def headOfQueue(env: ViewEnv = defaultEnv) =
+    unsafeRun((for {
+      queue <- ZIO.access[ViewEnv](_.appQueue)
+      msg <- queue.take
+    } yield msg).provide(env))
   val tests = Tests {
     "initialize" - {
       doCommand(ViewHandler.Initialize(() => TestView, TestViewModel(1)))()
-      callbacks.head ==> ViewHandler.Initialized
+      headOfQueue() ==> ViewCallbackWrap(ViewHandler.Initialized)
     }
     "update" - {
       doCommand(ViewHandler.Update(TestViewModel(5)))()
     }
     "cleanup" - {
       doCommand(ViewHandler.Cleanup)()
-      callbacks.head ==> ViewHandler.CleanedUp
+      headOfQueue() ==> ViewCallbackWrap(ViewHandler.CleanedUp)
     }
   }
 }

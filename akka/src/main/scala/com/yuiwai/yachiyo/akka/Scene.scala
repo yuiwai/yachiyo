@@ -27,9 +27,7 @@ object Scene {
             scene.cleanup()
             listener(CleanedUp)
             init(listener)
-          case _ =>
-            // TODO other messages.
-            Behaviors.same
+          case _ => Behaviors.same
         }
       }
     }

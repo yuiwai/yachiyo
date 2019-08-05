@@ -10,31 +10,10 @@ final case class Transition[A: Amount, P](
   def withExtension(extension: RateExtension): Transition[A, P] = copy(progress = progress.withExtension(extension))
 }
 
-trait Plus[T] {
-  def apply(l: T, r: T): T
-}
-object Plus {
-  implicit val intPlus: Plus[Int] = _ + _
-  implicit val doublePlus: Plus[Double] = _ + _
-}
-trait Multiply[T, V] {
-  def apply(t: T, v: V): T
-}
-object Multiply {
-  implicit val intDouble: Multiply[Int, Double] = { (i, d) => (i * d).toInt }
-  implicit val doubleDouble: Multiply[Double, Double] = _ * _
-}
-trait Minus[T] {
-  def apply(l: T, r: T): T
-}
-object Minus {
-  implicit val intMinus: Minus[Int] = _ - _
-  implicit val doubleMinus: Minus[Double] = _ - _
-}
 trait Amount[T] {
-  def zero: T
+  def zero(implicit z: Zero[T]): T = z()
   def value(initial: T, target: T, rate: Double): T
-  def +(l: T, r: T): T
+  def +(l: T, r: T)(implicit plus: Plus[T]): T = plus(l, r)
 }
 object Amount {
   abstract class NumericAmount[T: Numeric] extends Amount[T] {
@@ -45,17 +24,16 @@ object Amount {
     protected def toEachType(result: Double): T
   }
   implicit val intAmount: Amount[Int] = new NumericAmount[Int] {
-    def zero: Int = 0
     def toEachType(result: Double): Int = result.toInt
   }
+  implicit val floatAmount: Amount[Float] = new NumericAmount[Float] {
+    override protected def toEachType(result: Double): Float = result.toFloat
+  }
   implicit val doubleAmount: Amount[Double] = new NumericAmount[Double] {
-    def zero: Double = 0.0
     protected def toEachType(result: Double): Double = result
   }
   abstract class DelegateAmount[A, B: Amount] extends Amount[A] {
     private val amount = implicitly[Amount[B]]
-    def zero: A = reverse(amount.zero)
-    override def +(l: A, r: A): A = reverse(amount.+(convert(l), convert(r)))
     def convert(v: A): B
     def reverse(v: B): A
     def value(initial: A, target: A, rate: Double): A =
@@ -65,32 +43,21 @@ object Amount {
     override def convert(v: Char): Int = v.toInt
     override def reverse(v: Int): Char = v.toChar
   }
-  implicit def listAmount[T](implicit amount: Amount[T]): Amount[List[T]] = new Amount[List[T]] {
-    def zero: List[T] = Nil
-    override def +(l: List[T], r: List[T]): List[T] = l ++ r
-    def value(initial: List[T], target: List[T], rate: Double): List[T] =
+  implicit def listAmount[T](implicit amount: Amount[T]): Amount[List[T]] =
+    (initial: List[T], target: List[T], rate: Double) =>
       initial.zip(target).map { case (i, t) => amount.value(i, t, rate) }
-  }
   implicit val stringAmount: Amount[String] = new DelegateAmount[String, List[Char]] {
     override def convert(v: String): List[Char] = v.toList
     override def reverse(v: List[Char]): String = v.mkString
   }
-  implicit def posAmount[T](implicit amount: Amount[T]): Amount[Pos[T]] = new Amount[Pos[T]] {
-    def zero: Pos[T] = Pos(amount.zero, amount.zero)
-    override def +(l: Pos[T], r: Pos[T]): Pos[T] = Pos(amount.+(l.x, r.x), amount.+(l.y, r.y))
-    def value(initial: Pos[T], target: Pos[T], rate: Double): Pos[T] =
+  implicit def posAmount[T](implicit amount: Amount[T]): Amount[Pos[T]] =
+    (initial: Pos[T], target: Pos[T], rate: Double) =>
       Pos(amount.value(initial.x, target.x, rate), amount.value(initial.y, target.y, rate))
-  }
-  implicit val colorAmount: Amount[RGB] = new Amount[RGB] {
-    def zero: RGB = RGB(0, 0, 0)
-    override def +(l: RGB, r: RGB): RGB = RGB(l.r + r.r, l.g + r.g, l.b + r.b)
-    def value(initial: RGB, target: RGB, rate: Double): RGB =
-      RGB(
-        intAmount.value(initial.r, target.r, rate),
-        intAmount.value(initial.g, target.g, rate),
-        intAmount.value(initial.b, target.b, rate)
-      )
-  }
+  implicit val colorAmount: Amount[RGB] = (initial: RGB, target: RGB, rate: Double) => RGB(
+    intAmount.value(initial.r, target.r, rate),
+    intAmount.value(initial.g, target.g, rate),
+    intAmount.value(initial.b, target.b, rate)
+  )
 }
 
 final case class Progress[T: Counter](initial: T, target: T, current: T, extension: RateExtension = NoExtension) {

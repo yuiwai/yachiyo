@@ -17,33 +17,37 @@ object Presenter {
   case object CleanedUp extends PresenterCallback
   final case class Updated[M <: ViewModel](viewModel: ViewModel) extends PresenterCallback
 
-  def deployed[S <: ui.Scene, M <: ViewModel](presenter: ui.Presenter, listener: PresenterCallback => Unit): Behaviors.Receive[PresenterCommand] = {
-    def make(): Behaviors.Receive[PresenterCommand] = {
-      Behaviors.receive[PresenterCommand] { (_, msg) =>
-        msg match {
-          case Cleanup =>
-            presenter.cleanup()
-            listener(CleanedUp)
-            init(listener)
-          case Update(state) =>
-            val viewModel = presenter.updated(state.asInstanceOf[presenter.S#State])
-            listener(Updated(viewModel))
-            Behaviors.same
-          case _ =>
-            // TODO other behaviors
-            Behaviors.same
-        }
+  def deployed[S <: ui.Scene, M <: ViewModel]
+  (presenter: ui.Presenter, listener: PresenterCallback => Unit, initialModel: Option[M]): Behaviors.Receive[PresenterCommand] = {
+    make(
+      presenter,
+      listener,
+      if (presenter.usePrevModel) initialModel.map(_.asInstanceOf[presenter.M]) else None
+    )
+  }
+  private def make[M](presenter: ui.Presenter, listener: PresenterCallback => Unit, prevModel: Option[M]): Behaviors.Receive[PresenterCommand] = {
+    Behaviors.receive[PresenterCommand] { (_, msg) =>
+      msg match {
+        case Cleanup =>
+          presenter.cleanup()
+          listener(CleanedUp)
+          init(listener)
+        case Update(state) =>
+          val viewModel = presenter.updated(state.asInstanceOf[presenter.S#State], prevModel.map(_.asInstanceOf[presenter.M]))
+          listener(Updated(viewModel))
+          make(presenter, listener, if (presenter.usePrevModel) Some(viewModel) else None)
+        case _ => Behaviors.same
       }
     }
-    make()
   }
   def init[S <: ui.Scene](listener: PresenterCallback => Unit): Behavior[PresenterCommand] =
     Behaviors.receive { (_, msg) =>
       msg match {
         case Initialize(initialState, genPresenter) =>
           val presenter = genPresenter()
-          listener(Initialized(presenter.setup(initialState.asInstanceOf[presenter.S#State])))
-          deployed(presenter, listener)
+          val viewModel = presenter.setup(initialState.asInstanceOf[presenter.S#State])
+          listener(Initialized(viewModel))
+          deployed(presenter, listener, if (presenter.usePrevModel) Some(viewModel) else None)
         case _ => Behaviors.same
       }
     }

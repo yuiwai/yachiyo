@@ -31,6 +31,8 @@ object Application {
             case StateChangedCallback(state) =>
               presenterRef ! Presenter.Update(state)
               Behaviors.same
+            case EventCallback(_) => Behaviors.same
+            case CleanedUp => Behaviors.same
             case NoCallback => Behaviors.same
           }
         case PresenterCallbackWrap(msg) =>
@@ -41,18 +43,17 @@ object Application {
             case Presenter.Updated(viewModel) =>
               viewRef ! View.Update(viewModel)
               Behaviors.same
+            case Presenter.CleanedUp => Behaviors.same
           }
         case ViewCallbackWrap(msg) =>
           msg match {
-            case View.Initialized =>
-              Behaviors.same
+            case View.Initialized => Behaviors.same
             case View.ExecutionCallback(command) =>
               sceneRef ! command
               Behaviors.same
+            case View.CleanedUp => Behaviors.same
           }
-        case _ =>
-          // TODO implement other cases.
-          Behaviors.same
+        case _ => Behaviors.same
       }
     }
 
@@ -74,6 +75,7 @@ object Application {
         case ViewCallbackWrap(msg) => msg match {
           case View.CleanedUp =>
             make(sceneSuite)
+          case _ => Behaviors.same
         }
         case _ => Behaviors.same
       }

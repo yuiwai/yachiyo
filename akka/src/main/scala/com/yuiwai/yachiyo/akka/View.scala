@@ -29,8 +29,7 @@ object View {
         view.cleanup()
         listener(CleanedUp)
         init(listener)
-      case _ =>
-        Behaviors.same
+      case _ => Behaviors.same
     }
   }
 

@@ -141,7 +141,7 @@ object ApplicationHandler {
   val program: ZIO[AppEnv, Throwable, Unit] = for {
     appQueue <- ZIO.access[AppEnv](_.appState.appQueue)
     _ <- setup
-    f <- appQueue.take.tap(c => UIO(println(c))).flatMap(commandHandler).forever.fork
+    f <- appQueue.take.flatMap(commandHandler).forever.fork
     _ <- f.join
   } yield ()
 }

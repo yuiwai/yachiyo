@@ -4,7 +4,7 @@ val scalaVersion_2_12 = "2.12.8"
 val scalaVersion_2_13 = "2.13.0"
 val utestVersion = "0.6.9"
 
-version in ThisBuild := "0.2.1"
+version in ThisBuild := "0.2.2-SNAPSHOT"
 scalaVersion in ThisBuild := scalaVersion_2_12
 organization in ThisBuild := "com.yuiwai"
 scalacOptions in ThisBuild ++= Seq(

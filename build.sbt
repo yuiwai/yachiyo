@@ -88,6 +88,7 @@ lazy val zio = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "yachiyo-zio",
+    publishTo := Some(Resolver.file("file", file("release"))),
     crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
     testFrameworks += new TestFramework("utest.runner.Framework")
   )

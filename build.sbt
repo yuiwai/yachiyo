@@ -1,7 +1,11 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
+val scalaVersion_2_12 = "2.12.8"
+val scalaVersion_2_13 = "2.13.0"
+val utestVersion = "0.6.9"
+
 version in ThisBuild := "0.2.1"
-scalaVersion in ThisBuild := "2.12.8"
+scalaVersion in ThisBuild := scalaVersion_2_12
 organization in ThisBuild := "com.yuiwai"
 scalacOptions in ThisBuild ++= Seq(
   "-deprecation",
@@ -12,7 +16,7 @@ scalacOptions in ThisBuild ++= Seq(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(coreJVM, coreJS, uiJVM, uiJS, akkaJVM, akkaJS)
+  .aggregate(coreJVM, coreJS, uiJVM, uiJS, akkaJVM, akkaJS, zioJVM, zioJS)
   .settings(
     name := "yachiyo",
     publish / skip := true
@@ -23,18 +27,18 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "yachiyo-core",
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     publishTo := Some(Resolver.file("file", file("release")))
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % "0.6.7" % "test"
+      "com.lihaoyi" %% "utest" % utestVersion % "test"
     )
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % "0.6.7" % "test",
-      "org.akka-js" %%% "akkajsactortyped" % "1.2.5.21"
+      "com.lihaoyi" %%% "utest" % utestVersion % "test",
     )
   )
 
@@ -45,6 +49,7 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "yachiyo-ui",
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
     publishTo := Some(Resolver.file("file", file("release")))
   )
   .jsSettings(
@@ -78,6 +83,33 @@ lazy val akka = crossProject(JSPlatform, JVMPlatform)
 lazy val akkaJVM = akka.jvm
 lazy val akkaJS = akka.js
 
+
+lazy val zio = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "yachiyo-zio",
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
+    testFrameworks += new TestFramework("utest.runner.Framework")
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "utest" % utestVersion % "test",
+      "dev.zio" %% "zio" % "1.0.0-RC10-1",
+      "dev.zio" %% "zio-streams" % "1.0.0-RC10-1"
+    )
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "utest" % utestVersion % "test",
+      "dev.zio" %%% "zio" % "1.0.0-RC10-1",
+      "dev.zio" %%% "zio-streams" % "1.0.0-RC10-1"
+    )
+  )
+  .dependsOn(ui)
+
+lazy val zioJVM = zio.jvm
+lazy val zioJS = zio.js
+
 lazy val demo = project
   .in(file("demo"))
   .dependsOn(akkaJS)
@@ -90,6 +122,13 @@ lazy val demo = project
       "com.yuiwai" %%% "kasumi-core" % "0.2.0-SNAPSHOT"
     ),
     scalaJSUseMainModuleInitializer := true
+  )
+
+lazy val demoZio = project
+  .in(file("demo-zio"))
+  .dependsOn(zioJVM)
+  .settings(
+    name := "yachiyo-demo-zio"
   )
 
 lazy val fx = project

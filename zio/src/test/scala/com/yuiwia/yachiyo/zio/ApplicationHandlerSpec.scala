@@ -93,18 +93,20 @@ object SceneHandlerSpec extends TestSuite with DefaultRuntime {
     unsafeRun {
       for {
         queue <- Queue.unbounded[SceneCommand[_]]
-        ref <- Ref.make(TestScene)
+        sceneRef <- Ref.make(TestScene)
+        sceneStateRef<- Ref.make(TestScene.initialState(): TestScene.State)
         _ <- queue.offer(command)
-        _ <- SceneHandler.program(ref, queue).provide(env)
+        _ <- SceneHandler.program(sceneRef, sceneStateRef, queue).provide(env)
       } yield ()
     }
   def execute(command: TestScene.Command)(env: SceneEnv = defaultEnv): Unit =
     unsafeRun {
       for {
         queue <- Queue.unbounded[SceneCommand[_]]
-        ref <- Ref.make(TestScene)
+        sceneRef <- Ref.make(TestScene)
+        sceneStateRef<- Ref.make(TestScene.initialState(): TestScene.State)
         _ <- queue.offer(SceneHandler.Execution(command))
-        _ <- SceneHandler.program(ref, queue).provide(env)
+        _ <- SceneHandler.program(sceneRef, sceneStateRef, queue).provide(env)
       } yield ()
     }
   def headOfQueue(env: SceneEnv = defaultEnv) =

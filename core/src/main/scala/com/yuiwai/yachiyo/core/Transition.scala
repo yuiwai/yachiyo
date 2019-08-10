@@ -7,7 +7,7 @@ final case class Transition[A: Amount, P: Counter](
 ) {
   lazy val value: A = implicitly[Amount[A]].value(initial, target, progress.rate)
   def past(delta: P): Transition[A, P] = copy(progress = progress.past(delta))
-  def withNow(now: P): Transition[A, P] = copy(progress = progress.copy(current = now))
+  def withNow(now: P): Transition[A, P] = copy(progress = progress.withNow(now))
   def withExtension(extension: RateExtension): Transition[A, P] = copy(progress = progress.withExtension(extension))
 }
 
@@ -66,6 +66,7 @@ final case class Progress[T: Counter](initial: T, target: T, current: T, extensi
   require(counter.<(initial, target) && counter.>=(current, initial) && counter.<=(current, target))
   lazy val rate: Double = extension.calculate(counter.rate(initial, target, current))
   def past(p: T): Progress[T] = copy(current = counter.+(current, p))
+  def withNow(p: T): Progress[T] = copy(current = if (counter.>(p, target)) target else p)
   def withExtension(extension: RateExtension): Progress[T] = copy(extension = extension)
 }
 
@@ -86,7 +87,7 @@ object Counter {
     def >=(l: T, r: T): Boolean = numeric.gteq(l, r)
     def <=(l: T, r: T): Boolean = numeric.lteq(l, r)
     def rate(initial: T, target: T, current: T): Double =
-      numeric.toDouble(current) / (numeric.toDouble(target) - numeric.toDouble(initial))
+      (numeric.toDouble(current) - numeric.toDouble(initial)) / (numeric.toDouble(target) - numeric.toDouble(initial))
   }
   implicit val intCounter: Counter[Int] = new NumericCounter[Int] {}
   implicit val doubleCounter: Counter[Double] = new NumericCounter[Double] {}

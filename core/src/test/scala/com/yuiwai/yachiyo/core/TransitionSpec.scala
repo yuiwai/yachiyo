@@ -11,6 +11,8 @@ object TransitionSpec extends TestSuite {
         t.past(100).value ==> 10
         t.past(50).value ==> 5
         t.past(41).value ==> 4
+        t.withNow(100).value ==> 10
+        t.withNow(50).value ==> 5
       }
       "int reduce" - {
         val t = Transition(10, 0, Progress(0, 100, 0))
@@ -82,6 +84,7 @@ object ProgressSpec extends TestSuite {
       Progress(0, 1, 0).rate ==> 0
       Progress(0, 1, 1).rate ==> 1
       Progress(0, 2, 1).rate ==> 0.5
+      Progress(1, 2, 1).rate ==> 0
     }
     "past" - {
       val p = Progress(0, 100, 0)
@@ -105,6 +108,15 @@ object ProgressSpec extends TestSuite {
         Progress(0, 1, 1, SinEaseOutExtension).rate ==> 1
         assert(Progress(0, 2, 1, SinEaseOutExtension).rate < 0.5)
       }
+    }
+    "double" - {
+      Progress(0.0, 100.0, 0.0).rate ==> 0.0
+      Progress(0.0, 100.0, 100.0).rate ==> 1.0
+      Progress(0.0, 100.0, 40.0).rate ==> 0.4
+    }
+    "withNow" - {
+      Progress(10, 110, 10).withNow(60).rate ==> 0.5
+      Progress(0.1, 1.1, 0.1).withNow(0.6).rate ==> 0.5
     }
   }
 }

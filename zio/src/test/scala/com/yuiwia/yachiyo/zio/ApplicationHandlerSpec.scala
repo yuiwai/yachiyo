@@ -1,7 +1,7 @@
 package com.yuiwia.yachiyo.zio
 
 import com.yuiwai.yachiyo.ui
-import com.yuiwai.yachiyo.ui.{NoCallback, SceneCallback, SceneSuite, StateChangedCallback}
+import com.yuiwai.yachiyo.ui._
 import com.yuiwai.yachiyo.zio.ApplicationHandler._
 import com.yuiwai.yachiyo.zio.PresenterHandler.{PresenterCommand, PresenterEnv}
 import com.yuiwai.yachiyo.zio.SceneHandler.{SceneCommand, SceneEnv}
@@ -94,7 +94,7 @@ object SceneHandlerSpec extends TestSuite with DefaultRuntime {
       for {
         queue <- Queue.unbounded[SceneCommand[_]]
         sceneRef <- Ref.make(TestScene)
-        sceneStateRef<- Ref.make(TestScene.initialState(): TestScene.State)
+        sceneStateRef <- Ref.make(TestScene.initialState(): TestScene.State)
         _ <- queue.offer(command)
         _ <- SceneHandler.program(sceneRef, sceneStateRef, queue).provide(env)
       } yield ()
@@ -104,7 +104,7 @@ object SceneHandlerSpec extends TestSuite with DefaultRuntime {
       for {
         queue <- Queue.unbounded[SceneCommand[_]]
         sceneRef <- Ref.make(TestScene)
-        sceneStateRef<- Ref.make(TestScene.initialState(): TestScene.State)
+        sceneStateRef <- Ref.make(TestScene.initialState(): TestScene.State)
         _ <- queue.offer(SceneHandler.Execution(command))
         _ <- SceneHandler.program(sceneRef, sceneStateRef, queue).provide(env)
       } yield ()
@@ -136,7 +136,11 @@ object SceneHandlerSpec extends TestSuite with DefaultRuntime {
 }
 
 object PresenterHandlerSpec extends TestSuite with DefaultRuntime {
-  private val defaultEnv = unsafeRun(Queue.unbounded[ApplicationCommand].map(q => PresenterEnv(q)))
+  private val defaultEnv = unsafeRun(
+    for {
+      q <- Queue.unbounded[ApplicationCommand]
+    } yield PresenterEnv(q)
+  )
   def doCommand(command: PresenterCommand)(env: PresenterEnv = defaultEnv): Unit =
     unsafeRun {
       for {

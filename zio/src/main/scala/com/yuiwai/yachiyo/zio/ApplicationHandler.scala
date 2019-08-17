@@ -213,18 +213,26 @@ object PresenterHandler {
 
   def program(presenterRef: Ref[ui.Presenter], queue: Queue[PresenterCommand]): ZIO[PresenterEnv, Nothing, Unit] = for {
     appQueue <- ZIO.access[PresenterEnv](_.appQueue)
+    prevViewModel <- Ref.make(None: Option[ui.ViewModel])
     _ <- queue.take.flatMap { msg =>
       presenterRef.get.flatMap { presenter =>
         msg match {
           case Initialize(initialState, _) =>
             val viewModel = presenter.setup(initialState.asInstanceOf[presenter.S#State])
-            appQueue.offer(PresenterCallbackWrap(Initialized(viewModel)))
+            val q = appQueue.offer(PresenterCallbackWrap(Initialized(viewModel)))
+            if (presenter.usePrevModel) prevViewModel.set(Some(viewModel)) *> q
+            else q
           case Update(state) =>
-            val viewModel = presenter.updated(state.asInstanceOf[presenter.S#State], None)
-            appQueue.offer(PresenterCallbackWrap(Updated(viewModel)))
+            prevViewModel.get.flatMap { p =>
+              val viewModel = presenter
+                .updated(state.asInstanceOf[presenter.S#State], p.asInstanceOf[Option[presenter.M]])
+              val q = appQueue.offer(PresenterCallbackWrap(Updated(viewModel)))
+              if (presenter.usePrevModel) prevViewModel.set(Some(viewModel)) *> q
+              else q
+            }
           case Cleanup =>
             presenter.cleanup()
-            appQueue.offer(PresenterCallbackWrap(CleanedUp))
+            prevViewModel.set(None) *> appQueue.offer(PresenterCallbackWrap(CleanedUp))
         }
       }
     }.forever.fork

@@ -28,3 +28,8 @@ object Drawing {
     }
   }
 }
+
+trait Path[T] {
+  val from: Pos[T]
+  val to: Pos[T]
+}

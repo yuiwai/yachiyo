@@ -9,4 +9,6 @@ final case class Pos[T: Amount](x: T, y: T) extends Vector2D[T] {
 }
 object Pos {
   def zero[T: Zero](implicit a: Amount[T]): Pos[T] = apply(a.zero, a.zero)
+  def middle[T: Amount](pos1: Pos[T], pos2: Pos[T])(implicit plus: Plus[T], divide: Divide[T, Int]): Pos[T] =
+    Pos(divide(plus(pos1.x, pos2.x), 2), divide(plus(pos1.y, pos2.y), 2))
 }

@@ -5,7 +5,7 @@ val scalaVersion_2_13 = "2.13.0"
 val scalaVersion_2_11 = "2.11.11"
 val utestVersion = "0.6.9"
 
-version in ThisBuild := "0.2.2-SNAPSHOT"
+version in ThisBuild := "0.2.2"
 scalaVersion in ThisBuild := scalaVersion_2_12
 organization in ThisBuild := "com.yuiwai"
 scalacOptions in ThisBuild ++= Seq(
@@ -141,4 +141,4 @@ lazy val fx = project
       "org.scalafx" %% "scalafx" % "8.0.192-R14"
     )
   )
-  .dependsOn(uiJVM)
+  .dependsOn(uiJVM, coreJVM)

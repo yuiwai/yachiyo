@@ -114,7 +114,7 @@ lazy val zioJS = zio.js
 
 lazy val demo = project
   .in(file("demo"))
-  .dependsOn(akkaJS)
+  .dependsOn(akkaJS, coreJS)
   .enablePlugins(ScalaJSPlugin)
   .settings(
     name := "yachiyo-demo",

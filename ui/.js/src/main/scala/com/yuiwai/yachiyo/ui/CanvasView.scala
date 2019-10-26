@@ -1,6 +1,5 @@
 package com.yuiwai.yachiyo.ui
 
-import com.yuiwai.yachiyo.core.RGB
 import org.scalajs.dom.raw.{HTMLCanvasElement, ImageData}
 
 trait CanvasView extends DomView {
@@ -19,8 +18,9 @@ object CanvasView {
   trait Block {
     def width: Int
     def height: Int
-    def pixels: Seq[Pixel] = (0 until width * height) map (new Pixel(_))
+    // def pixels: Seq[Pixel] = (0 until width * height) map (new Pixel(_))
   }
+  /*
   final class Pixel(val index: Int) extends AnyVal {
     def get(imageData: ImageData): Option[RGB] = {
       val i = index * 4
@@ -36,5 +36,6 @@ object CanvasView {
     def mod(imageData: ImageData, f: RGB => RGB): Unit =
       get(imageData).foreach(c => put(imageData, f(c)))
   }
+   */
 }
 

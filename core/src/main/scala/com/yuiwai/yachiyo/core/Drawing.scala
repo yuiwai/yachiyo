@@ -28,3 +28,14 @@ object Drawing {
     }
   }
 }
+
+final case class Path(from: Pos[Int], to: Pos[Int]) {
+  def toList: List[Pos[Int]] = {
+    if (from == to) from :: Nil
+    else {
+      val o = Pos((from.x + to.x) / 2, (from.y + to.y) / 2)
+      if (from == o || to == o) from :: to :: Nil
+      else Path(from, o).toList ++ Path(o, to).toList.tail
+    }
+  }
+}

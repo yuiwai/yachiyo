@@ -36,7 +36,8 @@ object ApplicationHandler {
     appQueue: Queue[ApplicationCommand],
     sceneQueue: Queue[SceneCommand[_]],
     presenterQueue: Queue[PresenterCommand],
-    viewQueue: Queue[ViewCommand]
+    viewQueue: Queue[ViewCommand],
+    sceneState: Ref[ui.Scene#State]
   )
   object AppState extends DefaultRuntime {
     def unsafeInit(application: ui.Application): AppState = unsafeRun(init(application))
@@ -51,6 +52,7 @@ object ApplicationHandler {
         sceneQueue <- Queue.unbounded[SceneCommand[_]]
         presenterQueue <- Queue.unbounded[PresenterCommand]
         viewQueue <- Queue.unbounded[ViewCommand]
+        sceneState <- currentScene.get.flatMap(s => Ref.make(s.initialState().asInstanceOf[ui.Scene#State]))
       } yield new AppState(
         currentSceneKey,
         currentScene,
@@ -59,7 +61,8 @@ object ApplicationHandler {
         appQueue,
         sceneQueue,
         presenterQueue,
-        viewQueue
+        viewQueue,
+        sceneState
       )
     }
   }
@@ -132,7 +135,8 @@ object ApplicationHandler {
     sceneQueue <- ZIO.access[AppEnv](_.appState.sceneQueue)
     presenterQueue <- ZIO.access[AppEnv](_.appState.presenterQueue)
     viewQueue <- ZIO.access[AppEnv](_.appState.viewQueue)
-    _ <- SceneHandler.program(sceneRef, sceneQueue).provide(SceneEnv(appQueue))
+    sceneState <- ZIO.access[AppEnv](_.appState.sceneState)
+    _ <- SceneHandler.program(sceneRef, sceneState, sceneQueue).provide(SceneEnv(appQueue))
     _ <- PresenterHandler.program(presenterRef, presenterQueue).provide(PresenterEnv(appQueue))
     _ <- ViewHandler.program(viewRef, viewQueue).provide(ViewEnv(appQueue))
     _ <- sceneQueue.offer(SceneHandler.Initialize)
@@ -141,7 +145,7 @@ object ApplicationHandler {
   val program: ZIO[AppEnv, Throwable, Unit] = for {
     appQueue <- ZIO.access[AppEnv](_.appState.appQueue)
     _ <- setup
-    f <- appQueue.take.tap(c => UIO(println(c))).flatMap(commandHandler).forever.fork
+    f <- appQueue.take.flatMap(commandHandler).forever.fork
     _ <- f.join
   } yield ()
 }
@@ -175,18 +179,16 @@ object SceneHandler {
       UIO(state)
   }
 
-  def program[S <: ui.Scene](sceneRef: Ref[S], queue: Queue[SceneCommand[_]]): ZIO[SceneEnv, Throwable, Unit] = for {
+  def program[S <: ui.Scene](sceneRef: Ref[S], stateRef: Ref[S#State], queue: Queue[SceneCommand[_]]): ZIO[SceneEnv, Throwable, Unit] = for {
     appQueue <- ZIO.access[SceneEnv](_.appQueue)
     _ <- queue.take.flatMap { command =>
       sceneRef.get.flatMap { scene =>
-        Ref.make(scene.initialState()).flatMap { state =>
-          state.get.flatMap { s =>
-            commandHandler(scene, s, command, appQueue).flatMap { ss =>
-              if (s != ss) {
-                appQueue.offer(SceneCallbackWrap(ui.StateChangedCallback(ss))) *>
-                  state.set(ss.asInstanceOf[scene.State])
-              } else UIO(())
-            }
+        stateRef.get.flatMap { s =>
+          commandHandler(scene, s, command, appQueue).flatMap { ss =>
+            if (s != ss) {
+              appQueue.offer(SceneCallbackWrap(ui.StateChangedCallback(ss))) *>
+                stateRef.set(ss.asInstanceOf[scene.State])
+            } else UIO(())
           }
         }
       }
@@ -211,18 +213,26 @@ object PresenterHandler {
 
   def program(presenterRef: Ref[ui.Presenter], queue: Queue[PresenterCommand]): ZIO[PresenterEnv, Nothing, Unit] = for {
     appQueue <- ZIO.access[PresenterEnv](_.appQueue)
+    prevViewModel <- Ref.make(None: Option[ui.ViewModel])
     _ <- queue.take.flatMap { msg =>
       presenterRef.get.flatMap { presenter =>
         msg match {
           case Initialize(initialState, _) =>
             val viewModel = presenter.setup(initialState.asInstanceOf[presenter.S#State])
-            appQueue.offer(PresenterCallbackWrap(Initialized(viewModel)))
+            val q = appQueue.offer(PresenterCallbackWrap(Initialized(viewModel)))
+            if (presenter.usePrevModel) prevViewModel.set(Some(viewModel)) *> q
+            else q
           case Update(state) =>
-            val viewModel = presenter.updated(state.asInstanceOf[presenter.S#State], None)
-            appQueue.offer(PresenterCallbackWrap(Updated(viewModel)))
+            prevViewModel.get.flatMap { p =>
+              val viewModel = presenter
+                .updated(state.asInstanceOf[presenter.S#State], p.asInstanceOf[Option[presenter.M]])
+              val q = appQueue.offer(PresenterCallbackWrap(Updated(viewModel)))
+              if (presenter.usePrevModel) prevViewModel.set(Some(viewModel)) *> q
+              else q
+            }
           case Cleanup =>
             presenter.cleanup()
-            appQueue.offer(PresenterCallbackWrap(CleanedUp))
+            prevViewModel.set(None) *> appQueue.offer(PresenterCallbackWrap(CleanedUp))
         }
       }
     }.forever.fork

@@ -2,6 +2,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 val scalaVersion_2_12 = "2.12.8"
 val scalaVersion_2_13 = "2.13.0"
+val scalaVersion_2_11 = "2.11.11"
 val utestVersion = "0.6.9"
 
 version in ThisBuild := "0.2.2-SNAPSHOT"
@@ -49,7 +50,7 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "yachiyo-ui",
-    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
+    crossScalaVersions := Seq(scalaVersion_2_13, scalaVersion_2_12, scalaVersion_2_11),
     publishTo := Some(Resolver.file("file", file("release")))
   )
   .jsSettings(
@@ -57,7 +58,6 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
       "org.scala-js" %%% "scalajs-dom" % "0.9.7"
     )
   )
-  .dependsOn(core)
 
 lazy val uiJS = ui.js
 lazy val uiJVM = ui.jvm
@@ -66,6 +66,7 @@ lazy val akka = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "yachiyo-akka",
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_11),
     publishTo := Some(Resolver.file("file", file("release")))
   )
   .jvmSettings(

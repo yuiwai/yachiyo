@@ -62,6 +62,15 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
 lazy val uiJS = ui.js
 lazy val uiJVM = ui.jvm
 
+lazy val plain = crossProject(JSPlatform ,JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "yachiy-plain",
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_11),
+    publishTo := Some(Resolver.file("file", file("release")))
+  )
+  .dependsOn(ui)
+
 lazy val akka = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(

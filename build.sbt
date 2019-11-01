@@ -75,7 +75,7 @@ lazy val uiNative = ui.native
 lazy val plain = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
-    name := "yachiy-plain",
+    name := "yachiyo-plain",
     crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_11),
     publishTo := Some(Resolver.file("file", file("release")))
   )

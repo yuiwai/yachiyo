@@ -33,7 +33,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "yachiyo-core",
-    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     publishTo := Some(Resolver.file("file", file("release")))
   )
@@ -159,6 +159,15 @@ lazy val demoZio = project
   .settings(
     name := "yachiyo-demo-zio"
   )
+
+lazy val drawing = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("drawing"))
+  .settings(
+    name := "yachiyo-drawing",
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
+  )
+  .dependsOn(core)
 
 lazy val fx = project
   .in(file("fx"))

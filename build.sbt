@@ -17,7 +17,12 @@ scalacOptions in ThisBuild ++= Seq(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(coreJVM, coreJS, uiJVM, uiJS, akkaJVM, akkaJS, zioJVM, zioJS)
+  .aggregate(
+    coreJVM, coreJS,
+    uiJVM, uiJS, uiNative,
+    plainJVM, plainJS, plainNative,
+    akkaJVM, akkaJS,
+    zioJVM, zioJS)
   .settings(
     name := "yachiyo",
     publish / skip := true
@@ -46,7 +51,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
-lazy val ui = crossProject(JSPlatform, JVMPlatform)
+lazy val ui = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "yachiyo-ui",
@@ -58,9 +63,31 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
       "org.scala-js" %%% "scalajs-dom" % "0.9.7"
     )
   )
+  .nativeSettings(
+    crossScalaVersions := Nil,
+    scalaVersion := scalaVersion_2_11
+  )
 
 lazy val uiJS = ui.js
 lazy val uiJVM = ui.jvm
+lazy val uiNative = ui.native
+
+lazy val plain = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "yachiyo-plain",
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_11),
+    publishTo := Some(Resolver.file("file", file("release")))
+  )
+  .nativeSettings(
+    crossScalaVersions := Nil,
+    scalaVersion := scalaVersion_2_11
+  )
+  .dependsOn(ui)
+
+lazy val plainJVM = plain.jvm
+lazy val plainJS = plain.js
+lazy val plainNative = plain.native
 
 lazy val akka = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)

@@ -4,6 +4,7 @@ val scalaVersion_2_12 = "2.12.8"
 val scalaVersion_2_13 = "2.13.0"
 val scalaVersion_2_11 = "2.11.11"
 val utestVersion = "0.6.9"
+val monixVersion = "3.0.0"
 
 version in ThisBuild := "0.3.0-SNAPSHOT"
 scalaVersion in ThisBuild := scalaVersion_2_12
@@ -22,7 +23,8 @@ lazy val root = project
     uiJVM, uiJS, uiNative,
     plainJVM, plainJS, plainNative,
     akkaJVM, akkaJS,
-    zioJVM, zioJS)
+    zioJVM, zioJS,
+    monixJVM, monixJS)
   .settings(
     name := "yachiyo",
     publish / skip := true
@@ -138,6 +140,32 @@ lazy val zio = crossProject(JSPlatform, JVMPlatform)
 
 lazy val zioJVM = zio.jvm
 lazy val zioJS = zio.js
+
+
+lazy val monix = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "yachiyo-monix",
+    publishTo := Some(Resolver.file("file", file("release"))),
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
+    testFrameworks += new TestFramework("utest.runner.Framework")
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "utest" % utestVersion % "test",
+      "io.monix" %% "monix" % monixVersion
+    )
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "utest" % utestVersion % "test",
+      "io.monix" %%% "monix" % monixVersion
+    )
+  )
+  .dependsOn(ui)
+
+lazy val monixJVM = monix.jvm
+lazy val monixJS = monix.js
 
 lazy val demo = project
   .in(file("demo"))

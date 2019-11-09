@@ -68,30 +68,50 @@ trait Zero[T] {
   def apply(): T
 }
 object Zero {
-  implicit val booleanZero: Zero[Boolean] = () => false
-  implicit val intZero: Zero[Int] = () => 0
-  implicit val floatZero: Zero[Float] = () => 0f
-  implicit val doubleZero: Zero[Double] = () => 0.0
+  implicit val booleanZero: Zero[Boolean] = new Zero[Boolean] {
+    override def apply(): Boolean = false
+  }
+  implicit val intZero: Zero[Int] = new Zero[Int] {
+    override def apply(): Int = 0
+  }
+  implicit val floatZero: Zero[Float] = new Zero[Float] {
+    override def apply(): Float = 0f
+  }
+  implicit val doubleZero: Zero[Double] = new Zero[Double] {
+    override def apply(): Double = 0.0
+  }
 }
 
 trait UNIT[T] {
   def apply(): T
 }
 object UNIT {
-  implicit val intUnit: UNIT[Int] = () => 1
-  implicit val doubleUnit: UNIT[Double] = () => 1.0
-  implicit val boolUnit: UNIT[Boolean] = () => true
+  implicit val intUnit: UNIT[Int] = new UNIT[Int] {
+    override def apply(): Int = 1
+  }
+  implicit val doubleUnit: UNIT[Double] = new UNIT[Double] {
+    override def apply(): Double = 1.0
+  }
+  implicit val boolUnit: UNIT[Boolean] = new UNIT[Boolean] {
+    override def apply(): Boolean = true
+  }
 }
 
 trait FromDouble[T] {
   def apply(d: Double): T
 }
 object FromDouble {
-  implicit val toInt: FromDouble[Int] = _.toInt
-  implicit val toDouble: FromDouble[Double] = d => d
-  implicit val toBoolean: FromDouble[Boolean] = {
-    case 0.0 => false
-    case _ => true
+  implicit val toInt: FromDouble[Int] = new FromDouble[Int] {
+    override def apply(d: Double): Int = d.toInt
+  }
+  implicit val toDouble: FromDouble[Double] = new FromDouble[Double] {
+    override def apply(d: Double): Double = d
+  }
+  implicit val toBoolean: FromDouble[Boolean] = new FromDouble[Boolean] {
+    override def apply(d: Double): Boolean = d match {
+      case 0.0 => false
+      case _ => true
+    }
   }
 }
 
@@ -99,10 +119,17 @@ trait ToDouble[T] {
   def apply(v: T): Double
 }
 object ToDouble {
-  implicit val fromInt: ToDouble[Int] = _.toDouble
-  implicit val fromDouble: ToDouble[Double] = d => d
-  implicit val fromBoolean: ToDouble[Boolean] = {
-    case true => 1.0
-    case _ => 0.0
+  implicit val fromInt: ToDouble[Int] = new ToDouble[Int] {
+    override def apply(v: Int): Double = v.toDouble
+  }
+  implicit val fromDouble: ToDouble[Double] = new ToDouble[Double] {
+    override def apply(v: Double): Double = v
+  }
+  implicit val fromBoolean: ToDouble[Boolean] = new ToDouble[Boolean] {
+    override def apply(v: Boolean): Double = if (v) {
+      1.0
+    } else {
+      0.0
+    }
   }
 }

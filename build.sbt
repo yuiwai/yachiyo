@@ -19,6 +19,8 @@ lazy val root = project
   .in(file("."))
   .aggregate(
     coreJVM, coreJS,
+    drawingJVM, drawingJS,
+    drawingJSCanvas,
     uiJVM, uiJS, uiNative,
     plainJVM, plainJS, plainNative,
     akkaJVM, akkaJS,
@@ -33,7 +35,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "yachiyo-core",
-    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     publishTo := Some(Resolver.file("file", file("release")))
   )
@@ -44,7 +46,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % utestVersion % "test",
+      // "com.lihaoyi" %%% "utest" % utestVersion % "test",
     )
   )
 
@@ -159,6 +161,30 @@ lazy val demoZio = project
   .settings(
     name := "yachiyo-demo-zio"
   )
+
+lazy val drawing = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("drawing"))
+  .settings(
+    name := "yachiyo-drawing",
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
+  )
+  .dependsOn(core)
+
+lazy val drawingJVM = drawing.jvm
+lazy val drawingJS = drawing.js
+
+lazy val drawingJSCanvas = project
+  .in(file("drawing/jsCanvas"))
+  .settings(
+    name := "yachiyo-drawing-js-canvas",
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+    )
+  )
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(drawingJS)
 
 lazy val fx = project
   .in(file("fx"))

@@ -41,7 +41,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % utestVersion % "test"
+      // "com.lihaoyi" %% "utest" % utestVersion % "test"
     )
   )
   .jsSettings(

@@ -41,7 +41,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % utestVersion % "test"
+      // "com.lihaoyi" %% "utest" % utestVersion % "test"
     )
   )
   .jsSettings(
@@ -124,14 +124,14 @@ lazy val zio = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % utestVersion % "test",
+      // "com.lihaoyi" %% "utest" % utestVersion % "test",
       "dev.zio" %% "zio" % "1.0.0-RC10-1",
       "dev.zio" %% "zio-streams" % "1.0.0-RC10-1"
     )
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % utestVersion % "test",
+      // "com.lihaoyi" %%% "utest" % utestVersion % "test",
       "dev.zio" %%% "zio" % "1.0.0-RC10-1",
       "dev.zio" %%% "zio-streams" % "1.0.0-RC10-1"
     )

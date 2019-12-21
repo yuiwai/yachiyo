@@ -9,7 +9,7 @@ object View {
   type GenView = () => ui.View
   sealed trait ViewCommand
   final case class Initialize(genView: GenView, viewModel: ViewModel) extends ViewCommand
-  final case class Update(viewModel: ViewModel) extends ViewCommand
+  final case class Update(viewModel: ViewModel => ViewModel) extends ViewCommand
   case object CleanUp extends ViewCommand
 
   sealed trait ViewCallback
@@ -22,8 +22,8 @@ object View {
     view.setup(initialViewModel.asInstanceOf[view.M], c => listener(ExecutionCallback(Execution(c))))
 
     Behaviors.receiveMessage[ViewCommand] {
-      case Update(viewModel) =>
-        view.update(viewModel.asInstanceOf[view.M])
+      case Update(viewModelMod) =>
+        view.update(viewModelMod.asInstanceOf[view.M => view.M])
         Behaviors.same
       case CleanUp =>
         view.cleanup()

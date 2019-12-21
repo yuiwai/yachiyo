@@ -78,8 +78,8 @@ object ApplicationHandler {
   def handlePresenterCallback(appState: AppState, presenterCallback: PresenterCallback): AppState = presenterCallback match {
     case PresenterHandler.Initialized(viewModel) =>
       ViewHandler.commandHandler(appState, ViewHandler.Initialize(appState.currentSceneSuite.genView, viewModel))
-    case PresenterHandler.Updated(viewModel) =>
-      ViewHandler.commandHandler(appState, ViewHandler.Update(viewModel))
+    case PresenterHandler.Updated(viewModelMod) =>
+      ViewHandler.commandHandler(appState, ViewHandler.Update(viewModelMod.asInstanceOf[ViewModel => ViewModel]))
     case PresenterHandler.CleanedUp =>
       ViewHandler.commandHandler(appState, ViewHandler.CleanUp)
   }
@@ -146,15 +146,15 @@ object PresenterHandler {
   sealed trait PresenterCallback
   final case class Initialized(viewModel: ViewModel) extends PresenterCallback
   case object CleanedUp extends PresenterCallback
-  final case class Updated[M <: ViewModel](viewModel: ViewModel) extends PresenterCallback
+  final case class Updated[M <: ViewModel](viewModelMod: M => M) extends PresenterCallback
 
   def commandHandler(appState: AppState, command: PresenterCommand): AppState = command match {
     case Initialize(state, _) =>
       val viewModel = appState.presenter.setup(state.asInstanceOf[appState.presenter.S#State])
       ApplicationHandler.handleCommand(appState, PresenterCallbackWrap(Initialized(viewModel)))
     case Update(state) =>
-      val viewModel = appState.presenter.updated(state.asInstanceOf[appState.presenter.S#State], None)
-      ApplicationHandler.handleCommand(appState, PresenterCallbackWrap(Updated(viewModel)))
+      val viewModelMod = appState.presenter.updated(state.asInstanceOf[appState.presenter.S#State])
+      ApplicationHandler.handleCommand(appState, PresenterCallbackWrap(Updated(viewModelMod)))
     case Cleanup =>
       appState.presenter.cleanup()
       ApplicationHandler.handleCommand(appState, PresenterCallbackWrap(CleanedUp))
@@ -166,7 +166,7 @@ object ViewHandler {
   type GenView = () => ui.View
   sealed trait ViewCommand
   final case class Initialize(genView: GenView, viewModel: ViewModel) extends ViewCommand
-  final case class Update(viewModel: ViewModel) extends ViewCommand
+  final case class Update(viewModelMod: ViewModel => ViewModel) extends ViewCommand
   case object CleanUp extends ViewCommand
 
   sealed trait ViewCallback
@@ -180,8 +180,8 @@ object ViewHandler {
       view.setup(viewModel.asInstanceOf[view.M],
         msg => ApplicationHandler.postCommand(msg))
       ApplicationHandler.handleCommand(appState, ViewCallbackWrap(Initialized))
-    case Update(viewModel) =>
-      appState.view.update(viewModel.asInstanceOf[appState.view.M])
+    case Update(viewModelMod) =>
+      appState.view.update(viewModelMod.asInstanceOf[appState.view.M => appState.view.M])
       appState
     case CleanUp =>
       appState.view.cleanup()

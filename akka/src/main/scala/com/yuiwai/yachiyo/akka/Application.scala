@@ -40,8 +40,8 @@ object Application {
             case Presenter.Initialized(viewModel) =>
               viewRef ! View.Initialize(sceneSuite.genView, viewModel)
               Behaviors.same
-            case Presenter.Updated(viewModel) =>
-              viewRef ! View.Update(viewModel)
+            case Presenter.Updated(viewModelMod) =>
+              viewRef ! View.Update(viewModelMod)
               Behaviors.same
             case Presenter.CleanedUp => Behaviors.same
           }

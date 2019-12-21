@@ -15,17 +15,16 @@ object Presenter {
   sealed trait PresenterCallback
   final case class Initialized(viewModel: ViewModel) extends PresenterCallback
   case object CleanedUp extends PresenterCallback
-  final case class Updated[M <: ViewModel](viewModel: ViewModel) extends PresenterCallback
+  final case class Updated[M <: ViewModel](viewModelMod: M => M) extends PresenterCallback
 
   def deployed[S <: ui.Scene, M <: ViewModel]
-  (presenter: ui.Presenter, listener: PresenterCallback => Unit, initialModel: Option[M]): Behaviors.Receive[PresenterCommand] = {
+  (presenter: ui.Presenter, listener: PresenterCallback => Unit): Behaviors.Receive[PresenterCommand] = {
     make(
       presenter,
-      listener,
-      if (presenter.usePrevModel) initialModel.map(_.asInstanceOf[presenter.M]) else None
+      listener
     )
   }
-  private def make[M](presenter: ui.Presenter, listener: PresenterCallback => Unit, prevModel: Option[M]): Behaviors.Receive[PresenterCommand] = {
+  private def make[M](presenter: ui.Presenter, listener: PresenterCallback => Unit): Behaviors.Receive[PresenterCommand] = {
     Behaviors.receive[PresenterCommand] { (_, msg) =>
       msg match {
         case Cleanup =>
@@ -33,9 +32,9 @@ object Presenter {
           listener(CleanedUp)
           init(listener)
         case Update(state) =>
-          val viewModel = presenter.updated(state.asInstanceOf[presenter.S#State], prevModel.map(_.asInstanceOf[presenter.M]))
-          listener(Updated(viewModel))
-          make(presenter, listener, if (presenter.usePrevModel) Some(viewModel) else None)
+          val viewModelMod = presenter.updated(state.asInstanceOf[presenter.S#State])
+          listener(Updated(viewModelMod))
+          make(presenter, listener)
         case _ => Behaviors.same
       }
     }
@@ -47,7 +46,7 @@ object Presenter {
           val presenter = genPresenter()
           val viewModel = presenter.setup(initialState.asInstanceOf[presenter.S#State])
           listener(Initialized(viewModel))
-          deployed(presenter, listener, if (presenter.usePrevModel) Some(viewModel) else None)
+          deployed(presenter, listener)
         case _ => Behaviors.same
       }
     }

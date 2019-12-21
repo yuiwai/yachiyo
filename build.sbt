@@ -40,14 +40,28 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     publishTo := Some(Resolver.file("file", file("release")))
   )
   .jvmSettings(
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % utestVersion % "test"
-    )
+    libraryDependencies := {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 11)) =>
+          libraryDependencies.value
+        case _ =>
+          libraryDependencies.value ++ Seq(
+            "com.lihaoyi" %% "utest" % utestVersion % "test"
+          )
+      }
+    }
   )
   .jsSettings(
-    libraryDependencies ++= Seq(
-      // "com.lihaoyi" %%% "utest" % utestVersion % "test",
-    )
+    libraryDependencies := {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 11)) =>
+          libraryDependencies.value
+        case _ =>
+          libraryDependencies.value ++ Seq(
+            "com.lihaoyi" %%% "utest" % utestVersion % "test",
+          )
+      }
+    }
   )
 
 lazy val coreJVM = core.jvm
@@ -124,14 +138,14 @@ lazy val zio = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % utestVersion % "test",
+      // "com.lihaoyi" %% "utest" % utestVersion % "test",
       "dev.zio" %% "zio" % "1.0.0-RC10-1",
       "dev.zio" %% "zio-streams" % "1.0.0-RC10-1"
     )
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % utestVersion % "test",
+      // "com.lihaoyi" %%% "utest" % utestVersion % "test",
       "dev.zio" %%% "zio" % "1.0.0-RC10-1",
       "dev.zio" %%% "zio-streams" % "1.0.0-RC10-1"
     )

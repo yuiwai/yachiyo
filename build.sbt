@@ -5,7 +5,7 @@ val scalaVersion_2_13 = "2.13.0"
 val scalaVersion_2_11 = "2.11.11"
 val utestVersion = "0.6.9"
 
-version in ThisBuild := "0.2.2"
+version in ThisBuild := "0.3.0-SNAPSHOT"
 scalaVersion in ThisBuild := scalaVersion_2_12
 organization in ThisBuild := "com.yuiwai"
 scalacOptions in ThisBuild ++= Seq(
@@ -17,7 +17,14 @@ scalacOptions in ThisBuild ++= Seq(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(coreJVM, coreJS, uiJVM, uiJS, akkaJVM, akkaJS, zioJVM, zioJS)
+  .aggregate(
+    coreJVM, coreJS,
+    drawingJVM, drawingJS,
+    drawingJSCanvas,
+    uiJVM, uiJS, uiNative,
+    plainJVM, plainJS, plainNative,
+    akkaJVM, akkaJS,
+    zioJVM, zioJS)
   .settings(
     name := "yachiyo",
     publish / skip := true
@@ -28,25 +35,39 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "yachiyo-core",
-    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_13),
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     publishTo := Some(Resolver.file("file", file("release")))
   )
   .jvmSettings(
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % utestVersion % "test"
-    )
+    libraryDependencies := {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 11)) =>
+          libraryDependencies.value
+        case _ =>
+          libraryDependencies.value ++ Seq(
+            "com.lihaoyi" %% "utest" % utestVersion % "test"
+          )
+      }
+    }
   )
   .jsSettings(
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % utestVersion % "test",
-    )
+    libraryDependencies := {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 11)) =>
+          libraryDependencies.value
+        case _ =>
+          libraryDependencies.value ++ Seq(
+            "com.lihaoyi" %%% "utest" % utestVersion % "test",
+          )
+      }
+    }
   )
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
-lazy val ui = crossProject(JSPlatform, JVMPlatform)
+lazy val ui = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "yachiyo-ui",
@@ -58,9 +79,31 @@ lazy val ui = crossProject(JSPlatform, JVMPlatform)
       "org.scala-js" %%% "scalajs-dom" % "0.9.7"
     )
   )
+  .nativeSettings(
+    crossScalaVersions := Nil,
+    scalaVersion := scalaVersion_2_11
+  )
 
 lazy val uiJS = ui.js
 lazy val uiJVM = ui.jvm
+lazy val uiNative = ui.native
+
+lazy val plain = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "yachiyo-plain",
+    crossScalaVersions := Seq(scalaVersion_2_12, scalaVersion_2_11),
+    publishTo := Some(Resolver.file("file", file("release")))
+  )
+  .nativeSettings(
+    crossScalaVersions := Nil,
+    scalaVersion := scalaVersion_2_11
+  )
+  .dependsOn(ui)
+
+lazy val plainJVM = plain.jvm
+lazy val plainJS = plain.js
+lazy val plainNative = plain.native
 
 lazy val akka = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -95,14 +138,14 @@ lazy val zio = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % utestVersion % "test",
+      // "com.lihaoyi" %% "utest" % utestVersion % "test",
       "dev.zio" %% "zio" % "1.0.0-RC10-1",
       "dev.zio" %% "zio-streams" % "1.0.0-RC10-1"
     )
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % utestVersion % "test",
+      // "com.lihaoyi" %%% "utest" % utestVersion % "test",
       "dev.zio" %%% "zio" % "1.0.0-RC10-1",
       "dev.zio" %%% "zio-streams" % "1.0.0-RC10-1"
     )
@@ -132,6 +175,30 @@ lazy val demoZio = project
   .settings(
     name := "yachiyo-demo-zio"
   )
+
+lazy val drawing = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("drawing"))
+  .settings(
+    name := "yachiyo-drawing",
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
+  )
+  .dependsOn(core)
+
+lazy val drawingJVM = drawing.jvm
+lazy val drawingJS = drawing.js
+
+lazy val drawingJSCanvas = project
+  .in(file("drawing/jsCanvas"))
+  .settings(
+    name := "yachiyo-drawing-js-canvas",
+    crossScalaVersions := Seq(scalaVersion_2_11, scalaVersion_2_12, scalaVersion_2_13),
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7"
+    )
+  )
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(drawingJS)
 
 lazy val fx = project
   .in(file("fx"))

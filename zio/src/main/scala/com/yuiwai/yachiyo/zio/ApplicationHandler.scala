@@ -99,9 +99,9 @@ object ApplicationHandler {
         genView <- ZIO.accessM[AppEnv](_.currentSceneSuite.map(_.genView))
         _ <- queue.offer(ViewHandler.Initialize(genView, viewModel))
       } yield ()
-      case PresenterHandler.Updated(viewModel) => for {
+      case PresenterHandler.Updated(viewModelMod) => for {
         queue <- viewQueue
-        _ <- queue.offer(ViewHandler.Update(viewModel))
+        _ <- queue.offer(ViewHandler.Update(viewModelMod.asInstanceOf[ui.ViewModel => ui.ViewModel]))
       } yield ()
       case PresenterHandler.CleanedUp => for {
         queue <- viewQueue
@@ -209,30 +209,24 @@ object PresenterHandler {
   sealed trait PresenterCallback
   final case class Initialized(viewModel: ui.ViewModel) extends PresenterCallback
   case object CleanedUp extends PresenterCallback
-  final case class Updated[M <: ui.ViewModel](viewModel: ui.ViewModel) extends PresenterCallback
+  final case class Updated[M <: ui.ViewModel](viewModelMod: M => M) extends PresenterCallback
 
-  def program(presenterRef: Ref[ui.Presenter], queue: Queue[PresenterCommand]): ZIO[PresenterEnv, Nothing, Unit] = for {
+  def program(presenterRef: Ref[ui.Presenter], queue: Queue[PresenterCommand]): ZIO[PresenterEnv, Nothing, Unit] =
+    for {
     appQueue <- ZIO.access[PresenterEnv](_.appQueue)
-    prevViewModel <- Ref.make(None: Option[ui.ViewModel])
     _ <- queue.take.flatMap { msg =>
-      presenterRef.get.flatMap { presenter =>
+      presenterRef.get.flatMap { (presenter: ui.Presenter) =>
         msg match {
           case Initialize(initialState, _) =>
             val viewModel = presenter.setup(initialState.asInstanceOf[presenter.S#State])
-            val q = appQueue.offer(PresenterCallbackWrap(Initialized(viewModel)))
-            if (presenter.usePrevModel) prevViewModel.set(Some(viewModel)) *> q
-            else q
+            appQueue.offer(PresenterCallbackWrap(Initialized(viewModel)))
           case Update(state) =>
-            prevViewModel.get.flatMap { p =>
-              val viewModel = presenter
-                .updated(state.asInstanceOf[presenter.S#State], p.asInstanceOf[Option[presenter.M]])
-              val q = appQueue.offer(PresenterCallbackWrap(Updated(viewModel)))
-              if (presenter.usePrevModel) prevViewModel.set(Some(viewModel)) *> q
-              else q
-            }
+              val viewModelMod = presenter
+                .updated(state.asInstanceOf[presenter.S#State])
+              appQueue.offer(PresenterCallbackWrap(Updated(viewModelMod.asInstanceOf[ui.ViewModel => ui.ViewModel])))
           case Cleanup =>
             presenter.cleanup()
-            prevViewModel.set(None) *> appQueue.offer(PresenterCallbackWrap(CleanedUp))
+            appQueue.offer(PresenterCallbackWrap(CleanedUp))
         }
       }
     }.forever.fork
@@ -246,7 +240,7 @@ object ViewHandler extends DefaultRuntime {
 
   sealed trait ViewCommand
   final case class Initialize(genView: GenView, viewModel: ui.ViewModel) extends ViewCommand
-  final case class Update(viewModel: ui.ViewModel) extends ViewCommand
+  final case class Update(viewModelMod: ui.ViewModel => ui.ViewModel) extends ViewCommand
 
   case object Cleanup extends ViewCommand
   sealed trait ViewCallback
@@ -264,8 +258,8 @@ object ViewHandler extends DefaultRuntime {
               msg => unsafeRun(appQueue.offer(ViewCallbackWrap(ExecutionCallback(SceneHandler.Execution(msg)))))
             )
             appQueue.offer(ViewCallbackWrap(ViewHandler.Initialized))
-          case ViewHandler.Update(viewModel) =>
-            UIO(view.update(viewModel.asInstanceOf[view.M]))
+          case ViewHandler.Update(viewModelMod) =>
+            UIO(view.update(viewModelMod.asInstanceOf[view.M => view.M]))
           case ViewHandler.Cleanup =>
             view.cleanup()
             appQueue.offer(ViewCallbackWrap(ViewHandler.CleanedUp))

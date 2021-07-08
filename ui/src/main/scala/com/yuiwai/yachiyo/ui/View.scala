@@ -5,7 +5,7 @@ trait View {
   type S <: Scene
   type Listener = S#Command => Unit
   def setup(viewModel: M, listener: Listener): Unit
-  def update(viewModel: M): Unit
+  def update(viewModelMod: M => M): Unit
   def cleanup(): Unit
 }
 
